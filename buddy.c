@@ -17,10 +17,10 @@ PRIVATE int handlerIsInUse(int handler) {
 	return 1;
 }
 
-PRIVATE int freeAndMergeBuddies(int* map, int b1) {	
+PRIVATE int freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
 	/*first free the first buddy */
 	
-	map[b1] = 0;
+	map[mapIdx][b1] = 0;
 	
 	/* then, let's look at our buddy */
 	int b2;
@@ -32,9 +32,9 @@ PRIVATE int freeAndMergeBuddies(int* map, int b1) {
 	}
 	
 	/* This function will resolve the parent of b1 b2, then recurr*/
-	if (map[b2] == 0) {
+	if (maps[mapIdx][b2] == 0) {
 		int parent = b1 / 2;
-		freeAndMergeBuddies(parent);
+		freeAndMergeBuddies(maps, mapIndex - 1, parent);
 	}
 }
 
@@ -204,7 +204,7 @@ PUBlIC void bmemfree(void* region) {
 					if (s->head + (k * currentBlockSize) == region && map[k] == 1) {
 						/* We have indentified the region, and can now free */
 						
-						freeAndMergeBuddies(k);
+						freeAndMergeBuddies(s->bitmaps, j, k);
 					}
 				}
 				/*ready to ready the next map */
