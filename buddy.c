@@ -7,7 +7,14 @@ PRIVATE int isPowerOfTwo (unsigned int x) {
  return (x == 1);
 }
 
-PRIVATE void* allocAndSplit(void* maps, int mapIdx, int blockIdx, int blockSize) {
+PRIVATE void markDown(long n_bytes, void* maps, int mapIdx, int blockIdx, int blockSize) {
+	if (n_bytes <= blockSize) {
+		maps[mapIdx][blockIdx] = 1;
+		markDown(n_bytes, maps, mapIdx + 1, blockIdx * 2, blockSize / 2);
+	}
+}
+
+PRIVATE void* allocAndMark(long n_bytes, void* maps, int mapIdx, int blockIdx, int blockSize) {
 	int mapSize = 2 ^ mapIdx + 1;
 	int j;
 	for (j = blockIndx; j < mapSize; j++) {
@@ -20,20 +27,22 @@ PRIVATE void* allocAndSplit(void* maps, int mapIdx, int blockIdx, int blockSize)
 			buddy = j - 1;
 			
 		/* we have an in-use buddy, we can allocate */
-		if (maps[i][buddy] == 1) {
-			maps[i][j] = 1;
+		if (maps[mapIdx][buddy] == 1) {
+			maps[mapIdx][j] = 1;
 			
 			/* TODO: resolve the block size somehow */
 			void* slot = s->head + (blockSize * j);
 			
-			/* WE need to travel back down */
+			/* WE need to travel back down 
+			*/
+			markDown(n_byte, maps, mapIdx + 1, j * 2, blockSize / 2);
 			
 			return slot;
 			
 		}
 		else 
-			allocAndSplit(maps, mapIdx - 1, j, blockSize * 2);
-	}S
+			allocAndMark(n_bytes, maps, mapIdx - 1, j / 2, blockSize * 2);
+	}
 }
 
 PRIVATE void freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
@@ -204,7 +213,7 @@ PUBLIC void* bmemalloc(int handler, long n_bytes) {
 	/* if we are still here, it means we cant find a free slot at the lowest level,
 	   it is now necessary to recurr and split some blocks up */
 	
-	allocAndSplit(s->bitmaps, i-1, j, currentBlockSize * 2);
+	allocAndMark(n_bytes, s->bitmaps, i-1, j, currentBlockSize * 2);
 	
 	return NULL;
 }
