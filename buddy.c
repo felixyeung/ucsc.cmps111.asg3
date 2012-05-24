@@ -136,28 +136,28 @@ PUBLIC void* bmemalloc(int handler, long n_bytes) {
 	/* +1 because we dont have a map of a single item  */
 	int lengthOfMap = 2 ^ i + 1;
 	
-	/* becareful, we are reusing i 8) */
-	for (i = 0; i < lengthOfMap - 1; i++) {
+	int j;
+	for (j = 0; j < lengthOfMap - 1; j++) {
 		/* find first free */
-		if (map[i] == 0) {
-			int side = i % 2;
+		if (map[j] == 0) {
+			int side = j % 2;
 			int myBuddy;
 			
 			/* this is the left buddy */
 			if (side == 0)
-				myBuddy = i + 1;
+				myBuddy = j + 1;
 			/* right buddy */
 			else if (side == 1)
-				myBuddy = i - 1;
+				myBuddy = j - 1;
 				
 			/* My buddy better be in use or i can't use this slot */
 			if (map[myBuddy] == 1) {
 			
 				//ALLOCATE HERE
-				void* slot = s->head + (currentBlockSize * i);
+				void* slot = s->head + (currentBlockSize * j);
 				
 				//Change our bitmap
-				map[i] = 1;
+				map[j] = 1;
 				
 				return slot;
 			
@@ -165,10 +165,14 @@ PUBLIC void* bmemalloc(int handler, long n_bytes) {
 			else {
 				/* we are now going to look at bigger blocks */
 				currentBlockSize *= 2;
-				continue;
+				break;
 			}
 		}
 	}
+
+	/* if we are still here, it means we cant find a free slot at the lowest level,
+	   it is now necessary to recurr and split some blocks up */
+	
 	return NULL;
 }
 
