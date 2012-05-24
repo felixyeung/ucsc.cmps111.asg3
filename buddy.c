@@ -25,10 +25,10 @@ PRIVATE int freeAndMergeBuddies(int* map, int b1) {
 	/* then, let's look at our buddy */
 	int b2;
 	if (k % 2 == 0) {
-		buddy = k + 1;
+		b2 = k + 1;
 	}
 	else {
-		buddy = k - 1;
+		b2 = k - 1;
 	}
 	
 	/* This function will resolve the parent of b1 b2, then recurr*/
