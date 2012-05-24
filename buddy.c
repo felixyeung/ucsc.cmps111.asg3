@@ -17,6 +17,27 @@ PRIVATE int handlerIsInUse(int handler) {
 	return 1;
 }
 
+PRIVATE int freeAndMergeBuddies(int* map, int b1) {	
+	/*first free the first buddy */
+	
+	map[b1] = 0;
+	
+	/* then, let's look at our buddy */
+	int b2;
+	if (k % 2 == 0) {
+		buddy = k + 1;
+	}
+	else {
+		buddy = k - 1;
+	}
+	
+	/* This function will resolve the parent of b1 b2, then recurr*/
+	if (map[b2] == 0) {
+		int parent = b1 / 2;
+		freeAndMergeBuddies(parent);
+	}
+}
+
 PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 		int i;
 		
@@ -183,20 +204,7 @@ PUBlIC void bmemfree(void* region) {
 					if (s->head + (k * currentBlockSize) == region && map[k] == 1) {
 						/* We have indentified the region, and can now free */
 						
-						map[k] == 0;
-						
-						/* then, let's look at our buddy */
-						int buddy;
-						if (k % 2 == 0) {
-							buddy = k + 1;
-						}
-						else {
-							buddy = k - 1;
-						}
-						
-						/* This function will resolve the parent of b1 b2, then recurr*/
-						if (map[buddy] == 0)
-							mergeBuddies(b1, b2);
+						mergeAndfreeBuddies(k);
 					}
 				}
 				/*ready to ready the next map */
