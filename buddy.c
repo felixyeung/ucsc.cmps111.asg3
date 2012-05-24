@@ -38,7 +38,7 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 		int initMapLength = 1;
 		int mapsSize = 0;
 		for (i = 0; i < numBitmaps; i++) {
-			mapsSize += sizeof(char) * initMapLength;
+			mapsSize += sizeof(int) * initMapLength;
 			initMapLength *= 2;
 		}
 		
@@ -61,14 +61,14 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 		/* Now loop over and create maps of size 2 and greater*/
 		for (i = 0; i < numBitmaps; i++) {
 			s->bitmaps[i] = tmp_front;
-			tmp_front += sizeof(char) * initMapLength;
+			tmp_front += sizeof(int) * initMapLength;
 			initMapLength *= 2;
 		}
 		
 		/* THIS IS WHERE ACTUAL DATA GOES */
 		s->head = tmp_front;
 		
-		//s->end = s->head + n_bytes;
+		s->end = s->head + n_bytes;
 		
 		s->size = n_bytes;
 		
@@ -122,6 +122,71 @@ PUBLIC void* bmemalloc(int handler, long n_bytes) {
 	int* map = s->bitmaps[i];
 	int lengthOfMap = 2 ^ i;
 	
-	/* becareful, we are reusing i */
-	for (i
+	/* becareful, we are reusing i, we stop at map[1] 8) */
+	for (i = 0; i < lengthOfMap - 1; i++) {
+		/* find first free */
+		if (map[i] == 0) {
+			int side = i % 2;
+			int myBuddy;
+			
+			/* this is the left buddy */
+			if (side == 0)
+				myBuddy = i + 1;
+			/* right buddy */
+			else if (side == 1)
+				myBuddy = i - 1;
+				
+			/* My buddy better be in use or i can't use this slot */
+			if (map[myBuddy] == 1) {
+			
+				//ALLOCATE HERE
+				void* slot = s->head + (currentBlockSize * i);
+				return slot;
+			
+			}
+			else {
+				/* we are now going to look at bigger blocks */
+				currentBlockSize *= 2;
+				continue;
+			}
+		}
+	}
+	return NULL;
 }
+
+/*
+Ok, I need look at the bitmaps from bottom up;
+for map in bitmaps:
+	for each in bitmap:
+		if head + (i * blocksize):
+			free;
+*/
+PUBlIC void bmemfree(void* region) {
+	int i;
+	/* capture the space where region resides */
+	for (i = 0; i < 512; i++) {
+		if (region > spaces[i]->head && region < spaces[i]->end) {
+			struct space* s = spaces[i];
+			
+			/* we have found the space that our region is in */
+			int currentBlockSize = s->minPageSize;
+			
+			int j;
+			/* look from the lowest bitmap first */
+			for (j = s->numBitMaps - 1; j >= 0; j--) {
+				// for our bit map, look at each block and see if our region starts there.
+				int* map = s->bitmaps[j];
+				int lengthOfMap = 2 ^ j';
+				int k;
+				for (k = 0; k < lengthOfMap -1; k++) {
+					/* if  region is found and it's marked as 1 */
+					if (s->head + (k * currentBlockSize) == region && map[k] == 1) {
+						/* We have indentified the region, and can now free */
+					}
+				}
+				/*ready to ready the next map */
+				currentBlockSize *= 2;
+			}
+		}
+		/* nothing happens in this case */
+	}
