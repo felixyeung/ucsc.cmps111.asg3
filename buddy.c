@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include "space.h"
 
 PRIVATE int isPowerOfTwo (unsigned int x) {
  while (((x % 2) == 0) && x > 1) /* While x is even and > 1 */
