@@ -7,7 +7,7 @@ PRIVATE int isPowerOfTwo (unsigned int x) {
  return (x == 1);
 }
 
-PRIVATE void* allocAndSplit() {
+PRIVATE void* allocAndSplit(void* map, int mapIndex) {
 }
 
 PRIVATE void freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
