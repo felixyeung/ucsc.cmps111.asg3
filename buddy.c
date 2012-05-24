@@ -157,7 +157,7 @@ PUBLIC void* bmemalloc(int handler, long n_bytes) {
 /*
 Ok, I need look at the bitmaps from bottom up;
 for map in bitmaps:
-	for each in bitmap:
+	for each in map:
 		if head + (i * blocksize):
 			free;
 */
@@ -182,6 +182,21 @@ PUBlIC void bmemfree(void* region) {
 					/* if  region is found and it's marked as 1 */
 					if (s->head + (k * currentBlockSize) == region && map[k] == 1) {
 						/* We have indentified the region, and can now free */
+						
+						map[k] == 0;
+						
+						/* then, let's look at our buddy */
+						int buddy;
+						if (k % 2 == 0) {
+							buddy = k + 1;
+						}
+						else {
+							buddy = k - 1;
+						}
+						
+						/* This function will resolve the parent of b1 b2, then recurr*/
+						if (map[buddy] == 0)
+							mergeBuddies(b1, b2);
 					}
 				}
 				/*ready to ready the next map */
