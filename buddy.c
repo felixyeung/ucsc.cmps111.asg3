@@ -204,7 +204,7 @@ PUBlIC void bmemfree(void* region) {
 					if (s->head + (k * currentBlockSize) == region && map[k] == 1) {
 						/* We have indentified the region, and can now free */
 						
-						mergeAndfreeBuddies(k);
+						freeAndMergeBuddies(k);
 					}
 				}
 				/*ready to ready the next map */
