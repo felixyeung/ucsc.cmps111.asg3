@@ -1,4 +1,7 @@
-struct space {
+#ifndef SPACE_H
+#define SPACE_H
+
+typedef struct space {
    char type; //’b’ forbuddy, ‘s’ for slab, ‘f’ for free list
 
    int handle; //handle number
@@ -17,3 +20,5 @@ struct space {
 
    int min_page_size; //min size of space
 };
+
+#endif
