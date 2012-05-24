@@ -7,7 +7,10 @@ PRIVATE int isPowerOfTwo (unsigned int x) {
  return (x == 1);
 }
 
-PRIVATE int freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
+PRIVATE void* allocAndSplit() {
+}
+
+PRIVATE void freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
 	/*first free the first buddy */
 	
 	map[mapIdx][b1] = 0;
