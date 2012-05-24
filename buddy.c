@@ -132,9 +132,11 @@ PUBLIC void* bmemalloc(int handler, long n_bytes) {
 	
 	/* local map */
 	int* map = s->bitmaps[i];
-	int lengthOfMap = 2 ^ i;
 	
-	/* becareful, we are reusing i, we stop at map[1] 8) */
+	/* +1 because we dont have a map of a single item  */
+	int lengthOfMap = 2 ^ i + 1;
+	
+	/* becareful, we are reusing i 8) */
 	for (i = 0; i < lengthOfMap - 1; i++) {
 		/* find first free */
 		if (map[i] == 0) {
@@ -153,6 +155,10 @@ PUBLIC void* bmemalloc(int handler, long n_bytes) {
 			
 				//ALLOCATE HERE
 				void* slot = s->head + (currentBlockSize * i);
+				
+				//Change our bitmap
+				map[i] = 1;
+				
 				return slot;
 			
 			}
