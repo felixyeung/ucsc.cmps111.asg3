@@ -7,16 +7,6 @@ PRIVATE int isPowerOfTwo (unsigned int x) {
  return (x == 1);
 }
 
-PRIVATE int handlerIsInUse(int handler) {
-	int i;
-	/* 512 is the max number of allocators we can have at once */
-	for (i = 0 ; i < 512; i++) {
-		if (handler != i)
-			return 0;
-	}
-	return 1;
-}
-
 PRIVATE int freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
 	/*first free the first buddy */
 	
@@ -51,12 +41,12 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 		/* calculating number of  Bitmaps we need */
 		int numBitmaps = 0;
 		int tmp;
-		for(tmp = numPages; tmp > 0; tmp >> 1) {
+		for(tmp = numPages; tmp > 1; tmp >> 1) {
 			numBitmaps += 1;
 		}
 		
 		/* Since we can only call malloc once, this is the total space we need */
-		int initMapLength = 1;
+		int initMapLength = 2;
 		int mapsSize = 0;
 		for (i = 0; i < numBitmaps; i++) {
 			mapsSize += sizeof(int) * initMapLength;
@@ -77,7 +67,7 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 		s->bitmaps = tmp_front;
 		tmp_front = s->bitmaps + sizeof(void*) * numBitmaps;
 		
-		initMapLength = 1;
+		initMapLength = 2;
 		
 		/* Now loop over and create maps of size 2 and greater*/
 		for (i = 0; i < numBitmaps; i++) {
@@ -105,8 +95,9 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 		int handler;
 		/* 512 is the max number of allocators we can have at once */
 		for (i = 0; i < 512; i++) {
-			if (!handlerIsInUse(i)) {
+			if (spaces[i] != NULL) {
 				handler = i;
+				spaces[i] = s;
 				break;
 			}
 		}
