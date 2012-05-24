@@ -118,7 +118,7 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 		/* THIS IS WHERE ACTUAL DATA GOES */
 		s->head = tmp_front;
 		
-		s->end = s->head + n_bytes;
+		s->end = s->head + n_bytes - 1;
 		
 		s->size = n_bytes;
 		
