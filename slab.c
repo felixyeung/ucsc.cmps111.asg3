@@ -64,7 +64,7 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
         newSpace->slabs[i] = 0;
     }
     
-    // Copy parm2 into sizeArray
+    // Copy parm2 into sizeArray, including the NULL-termination
     for (i = 0; i < sizeArrayLen; i++) {
         newSpace->sizeArray[i] = parm2[i];
     }
