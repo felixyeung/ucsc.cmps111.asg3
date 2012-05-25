@@ -1,4 +1,6 @@
-#define PAGESIZE 4096
+#include <stdlib.h>
+
+#define PAGESIZE 4096        
 
 int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
     // Find an open spot in spaces.
@@ -15,23 +17,40 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
         return -1;
     }
 
+    // Get the size of parm2, to be used when making sizeArray
+    int sizeArrayLen = 1;
+    while (parm2[sizeArrayLen - 1] != 0) {
+        sizeArrayLen += 1;
+    }
+    
+    // Calculate the number of slabs
     int slabSize = parm1 * PAGESIZE;
     int numSlabs = n_bytes / slabSize;
-    int bytesToAlloc = sizeof (struct space) + sizeof (int) * numSlabs
-                + n_bytes;
+    
+    // Calculate the number of bytes to allocate
+    int bytesToAlloc = sizeof (struct space)
+                       + sizeof (int) * sizeArrayLen
+                       + sizeof (int) * numSlabs
+                       + n_bytes;
     void* allocBlock = malloc (bytesToAlloc);
     
     // Initialize the struct.
     struct space* newSpace = allocBlock;
     newSpace->type = 's';
     newSpace->handle = handle;
-    newSpace->head = allocBlock + sizeof (struct space)
-                + sizeof (int) * numSlabs;
+    newSpace->head = allocBlock
+                     + sizeof (struct space)
+                     + sizeof (int) * numSlabs
+                     + sizeof (int) * sizeArrayLen;
     newSpace->end = newSpace->head + n_bytes - 1;
     newSpace->size = n_bytes;
     newSpace->minPageSize = PAGESIZE;
+    newSpace->sizeArray = allocBlock
+                          + sizeof (struct space);
     newSpace->numSlabs = numSlabs;
-    newSpace->slabs = allocBlock + sizeof (struct space);
+    newSpace->slabs = allocBlock
+                      + sizeof (struct space)
+                      + sizeof (int) * numSlabs;
     
     // Fields we won't be using.
     newSpace->bitmaps = NULL;
@@ -45,9 +64,17 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
         newSpace->slabs[i] = 0;
     }
     
+    // Copy parm2 into sizeArray
+    for (i = 0; i < sizeArrayLen; i++) {
+        newSpace->sizeArray[i] = parm2[i];
+    }
+    
     // Add newSpace to spaces.
     spaces[handle] = newSpace;
     
     return handle;
 }
+
+void* smemalloc (int handle, long n_bytes) {
     
+}
