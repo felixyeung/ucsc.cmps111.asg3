@@ -76,5 +76,18 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
 }
 
 void* smemalloc (int handle, long n_bytes) {
+    struct space* s = spaces[handle];
     
+    // Find the best fit from the array of sizes available.
+    int fit = 0;
+    int i;
+    for (i = 0; s->sizeArray[i] != 0; i++) {
+        if (s->sizeArray[i] >= n_bytes) {
+            if (fit == 0 || s->sizeArray[i] < fit) {
+                fit = s->sizeArray[i];
+            }
+        }
+    }
+    
+    // INCOMPLETE
 }
