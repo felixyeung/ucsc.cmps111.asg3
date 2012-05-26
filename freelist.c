@@ -4,7 +4,7 @@
 
 /* This function simply -4 from a list item*/
 PRIVATE long getUsableSize(long itemSpace) {
-	return itemSpace - 4;
+	return *(itemSpace - 4);
 }
 
 /*
@@ -44,6 +44,61 @@ PRIVATE void* allocateIntoBlock(struct space* s, void* prev , void* target, long
 	*(target + n_bytes) = *(target - 4) - n_bytes - 4; 
 	return target;
 }
+
+/*capture last free block to the left of region */
+PRIVATE void* prevFree(struct space* s, void* region) {
+	void* currFreeBlock = s->firstFree;
+	void* prevFreeBlock = NULL;
+	do {
+		/* resolve the start of the block (used or un used) */
+		if (region < currFreeBlock && region > prevFreeBlock) {
+			return prevFreeBlock;
+		}
+		prevFreeBlock = currFreeBlock;
+		currFreeBlock = *currFreeBlock;
+	} while (currFreeBlock != NULL);
+	return prevFreeBlock;
+}
+
+PRIVATE void* nextFree(struct space* s, void* region) {
+	void* currFreeBlock = s->firstFree;
+	void* prevFreeBlock = NULL;
+	do {
+		/* resolve the start of the block (used or un used) */
+		if (region < currFreeBlock && region > prevFreeBlock) {
+			return currentFreeBlock;
+		}
+		prevFreeBlock = currFreeBlock;
+		currFreeBlock = *currFreeBlock;
+	} while (currFreeBlock != NULL);
+	return NULL;
+}
+
+/* discover the left adjacent free block to region, if exists */
+PRIVATE void* leftAdjacent(struct space* s, void* region) {
+	void* currFreeBlock = s->firstFree;
+	do {
+		/* resolve the start of the block (used or un used) */
+		if (currFreeBlock + getFreeSize(currFreeBlock) == region - 4) {
+			return currFreeBlock;
+		}
+		currFreeBlock = *currFreeBlock;
+	} while (currFreeBlock != NULL);
+	else NULL;
+}
+
+PRIVATE void* rightAdjacent(struct space* s, void* region) {
+	void* currFreeBlock = s->firstFree;
+	do {
+		/* resolve the start of the block (used or un used) */
+		if (region + getFreeSize(region) == currFreeBlock - 4) {
+			return currFreeBlock;
+		}
+		currFreeBlock = *currFreeBlock;
+	} while (currFreeBlock != NULL);
+	else NULL;
+}
+
 /*
  this is what a free list item looks like: 
 [ freespace (4 bytes) | previous (4 bytes) | nextfree (4 bytes) | ... ]
@@ -202,22 +257,41 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 	}
 }
 
+/*
+We need to free the list and merge it with adjacent lists
+*/
 PUBlIC void fmemfree(void* region) {
 	int i;
 	/* capture the space where region resides */
 	for (i = 0; i < 512; i++) {
 		if (region > spaces[i]->head && region < spaces[i]->end) {
 			struct space* s = spaces[i];
-			switch (s->listType){
-				case 0x0;
-				break;
-				case 0x08;
-				break;
-				case 0x10;
-				break;
-				case 0x18;
-				break;
+			
+			/* clean some space*/
+			memest(region, 0, *(region - 4));
+			
+			void* left = leftFree(s, region);
+			void* right = rightFree(s, region);
+			
+			/*link region after left */
+			*left = region;
+			/*link region before right*/
+			*region = right;
+			
+			void* leftAdj = leftAdjacent(s, region);
+			void * rightAdj = rightAdjacent(s, region);
+
+			if (rightAdj) {
+				*(region - 4) += *(rightAdj - 4) + 4;
+				memset(region, 0, *(region - 4));
 			}
+			
+			/*increase the free space of left adjcent list */
+			if (leftAdj) {
+				*(leftAdj - 4) += *(region - 4) + 4;
+				memest(leftAdj, 0, *(leftAdj - 4));
+			}
+			
 		}
 	}
 }
