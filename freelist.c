@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include "space.h"
+#define begin {
+#define end ;}
 
 /* This function simply -4 from a list item*/
 PRIVATE long getUsableSize(long itemSpace) {
@@ -37,11 +39,19 @@ PRIVATE long getFreeSize(void* freeSpace)
 
 PRIVATE void* allocateIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {
 	if (prev != NULL)
-		*prev = target + n_bytes + 4;
+		*prev = *target;
 	else 
-		s->firstFree = target + n_bytes + 4;
+		s->firstFree = *target;
 	
-	*(target + n_bytes) = *(target - 4) - n_bytes - 4; 
+	/* splitting */
+	if (*(target - 4) > n_bytes + 4) {
+		void* tmp =  target + n_bytes + 4;
+		*tmp = *target;
+		
+		*(tmp - 4) = *(target - 4) - n_bytes - 4; 
+		/* prev now points to the newly splitted block */
+		*prev = tmp;
+	}
 	return target;
 }
 
@@ -205,7 +215,7 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 				if (getFreeSize(currFree) >= n_bytes) {
 					/* If we have a previous free block, we have to set its
 					next pointer to the new free block*/
-					allocIntoListItem(s, prev, currFree, n_bytes);
+					allocIntoBlock(s, prev, currFree, n_bytes);
 				}
 				
 				prev = currFree;
@@ -215,7 +225,7 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 		case 0x08:
 			do {
 				if (getFreeSize(currFree) >= n_bytes) {
-					allocIntoListItem(s, prev, currFree, n_bytes);
+					allocIntoBlock(s, prev, currFree, n_bytes);
 				}
 				
 				prev = currFree;
@@ -250,10 +260,10 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 	
 	/* Actual allocation happens out here for best and worst fit since we need to read the entire array */
 	if (s->listType == 0x08) {
-		allocIntoListItem(s, theBestPrev, theBest, n_bytes);
+		allocIntoBlock(s, theBestPrev, theBest, n_bytes);
 	}
 	if (s->listType == 0x18) {
-		allocIntoListItem(s, theWorstPrev, theWorst, n_bytes);
+		allocIntoBlock(s, theWorstPrev, theWorst, n_bytes);
 	}
 }
 
@@ -274,7 +284,8 @@ PUBlIC void fmemfree(void* region) {
 			void* right = rightFree(s, region);
 			
 			/*link region after left */
-			*left = region;
+			if (left)
+				*left = region;
 			/*link region before right*/
 			*region = right;
 			
@@ -283,15 +294,21 @@ PUBlIC void fmemfree(void* region) {
 
 			if (rightAdj) {
 				*(region - 4) += *(rightAdj - 4) + 4;
-				memset(region, 0, *(region - 4));
+				*region = *rightAdj;
+				if (s->nextFree == rightAdj) {
+					s->nextFree = *rightAdj;
+				}
 			}
 			
 			/*increase the free space of left adjcent list */
 			if (leftAdj) {
 				*(leftAdj - 4) += *(region - 4) + 4;
-				memest(leftAdj, 0, *(leftAdj - 4));
+				*leftAdj = *region;
+				region = leftAdj;
 			}
 			
+			if (region < s->firstFree)
+				s->fristFree = region;
 		}
 	}
 }
