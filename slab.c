@@ -149,6 +149,10 @@ void* smemalloc (int handle, long n_bytes) {
             }
         }
         
+        /* If we get here, there is no allocated slab of the size we desire.
+         * After the best fit is checked, the results of this code will not
+         * change with each iteration.
+         */
         for (i = 0; i < numSlabs; i++) {
             if (s->slabs[i] == 0) {
                 // Unallocated slab
@@ -160,3 +164,5 @@ void* smemalloc (int handle, long n_bytes) {
         }
     }
 }
+
+
