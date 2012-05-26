@@ -1,6 +1,17 @@
 #include <stdlib.h>
 
-#define PAGESIZE 4096        
+#define PAGESIZE 4096      
+
+int min (int* array) {
+    int min = array[0];
+    int i;
+    for (i = 0; array[i] != 0; i++) {
+        if (array[i] < min)
+            min = array[i];
+    }
+    
+    return min;
+}
 
 int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
     // Find an open spot in spaces.
@@ -27,10 +38,14 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
     int slabSize = parm1 * PAGESIZE;
     int numSlabs = n_bytes / slabSize;
     
+    int minPieceSize = min (parm2);
+    int maxBitmapLen = slabSize / minPieceSize;
+    
     // Calculate the number of bytes to allocate
     int bytesToAlloc = sizeof (struct space)
                        + sizeof (int) * sizeArrayLen
                        + sizeof (int) * numSlabs
+                       + sizeof (char) * numSlabs * maxBitmapLen
                        + n_bytes;
     void* allocBlock = malloc (bytesToAlloc);
     
@@ -42,6 +57,7 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
                      + sizeof (struct space)
                      + sizeof (int) * numSlabs
                      + sizeof (int) * sizeArrayLen;
+                     + sizeof (char) * numSlabs * maxBitmapLen
     newSpace->end = newSpace->head + n_bytes - 1;
     newSpace->size = n_bytes;
     newSpace->minPageSize = PAGESIZE;
@@ -51,10 +67,13 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
     newSpace->slabs = allocBlock
                       + sizeof (struct space)
                       + sizeof (int) * numSlabs;
+    newSpace->bitmaps = allocBlock
+                        + sizeof (struct space)
+                        + sizeof (int) * numSlabs
+                        + sizeof (int) * sizeArrayLen;
+    newSpace->numBitmaps = numSlabs;
     
     // Fields we won't be using.
-    newSpace->bitmaps = NULL;
-    newSpace->numBitmaps = 0;
     newSpace->listType = 0;
     newSpace->firstFree = NULL;
     newSpace->nextFree = NULL;
@@ -69,10 +88,20 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
         newSpace->sizeArray[i] = parm2[i];
     }
     
+    // Zero out the bitmaps
+    memset (newSpace->bitmaps, 0, numSlabs * maxBitmapLen);
+    
     // Add newSpace to spaces.
     spaces[handle] = newSpace;
     
     return handle;
+} 
+
+void* sGetPointer (struct space* s, int objSize, int slabIdx, int slabOffset) {
+    void* ptr = s->head;
+    ptr += s->slabSize * slabIdx;
+    ptr += objSize * slabOffset;
+    return ptr;
 }
 
 void* smemalloc (int handle, long n_bytes) {
@@ -80,14 +109,54 @@ void* smemalloc (int handle, long n_bytes) {
     
     // Find the best fit from the array of sizes available.
     int fit = 0;
+    int prevFit = 0;
     int i;
-    for (i = 0; s->sizeArray[i] != 0; i++) {
-        if (s->sizeArray[i] >= n_bytes) {
-            if (fit == 0 || s->sizeArray[i] < fit) {
-                fit = s->sizeArray[i];
+    
+    for (;;) {
+        // find the next best fit
+        prevFit = fit;
+        fit = 0;
+        for (i = 0; s->sizeArray[i] != 0; i++) {
+            if (s->sizeArray[i] >= n_bytes) {
+                if ((fit == 0 || s->sizeArray[i] < fit)
+                            && s->sizeArray[i] > prevFit)) {
+                    fit = s->sizeArray[i];
+                }
+            }
+        }
+        if (fit == 0)
+            // Then there is no size left unchecked.
+            return NULL;
+            
+        // Iterate through size array, looking for an allocated slab of size ==
+        // fit
+        for (i = 0; i < numSlabs; i++) {
+            if (s->slabs[i] == fit) {
+                // Check to see if there are remaining spaces in the slab
+                int j;
+                numSlabParts = s->slabSize / s->slabs[i];
+                for (j = 0; j < numSlabParts; j++) {
+                    if (bitmaps[i][j] == 0) {
+                        // We're good
+                        break;
+                    }
+                }
+                if (j < numSlabParts) {
+                    // There is a free piece, so use it
+                    bitmaps[i][j] = 1;
+                    return sGetPointer (s, fit, i, j);
+                }
+            }
+        }
+        
+        for (i = 0; i < numSlabs; i++) {
+            if (s->slabs[i] == 0) {
+                // Unallocated slab
+                // TAKE IT AS YOUR OWN
+                s->slabs[i] = fit;
+                bitmaps[i][0] = 1;
+                return sGetPointer (s, fit, i, 0);
             }
         }
     }
-    
-    // INCOMPLETE
 }
