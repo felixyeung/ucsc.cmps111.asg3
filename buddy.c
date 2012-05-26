@@ -111,6 +111,10 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	/* Now loop over and create maps of size 2 and greater*/
 	for (i = 0; i < numBitmaps; i++) {
 		s->bitmaps[i] = tmp_front;
+		
+		/*clear bitmap*/
+		memset(s->bitmaps[i], 0, sizeof(int) * initMapLength);
+		
 		tmp_front += sizeof(int) * initMapLength;
 		initMapLength *= 2;
 	}
