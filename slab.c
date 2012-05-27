@@ -165,4 +165,24 @@ void* smemalloc (int handle, long n_bytes) {
     }
 }
 
+void smemfree (struct space* s, void* region) {
+    void* offset = region - s->head;
+    int slabIdx = (int) (offset / s->slabSize);
+    int slabOffset = (int) ((offset % s->slabSize) / s->slabs[slabIdx]);
 
+    /* Free the region */
+    s->bitmaps[slabIdx][slabOffset] = 0;
+    
+    /* If all regions in the slab are free, free the slab */
+    int i = 0;
+    int numRegions = (int) (s->slabSize / s->slabs[slabIdx]);
+    int isInUse = 0;
+    for (i = 0; i < numRegions; i++) {
+        if (s->bitmaps[slabIdx][i] != 0) {
+            isInUse = 1;
+        }
+    }
+    if (!isInUse) {
+        s->slabs[slabIdx] = 0;
+    }
+}
