@@ -1,24 +1,27 @@
 #include <stdlib.h>
 #include <math.h>
 #include "space.h"
-#define begin {
-#define end ;}
+
+#define SIZE( _p ) (*((int*) (_p - 4)))
+#define NEXT( _p ) (*((void**) (_p)))
+// #define begin {
+// #define end ;}
 
 /* This function simply -4 from a list item*/
-PRIVATE long getUsableSize(long itemSpace) {
-	return *(itemSpace - 4);
+PRIVATE long getUsableSize(void* itemSpace) {
+	return SIZE (itemSpace);
 }
 
 /*
  Return pointer to the start of actual freespace 
 we waste 8 bytes, but who cares?
 */
-PRIVATE void* getUsableLoc(void* freeSpace)
+PRIVATE void* getUsableLoc(void* freeSpace) {
 	return *freeSpace;
 }
 
-PRIVATE void* getNextLoc(void* freeSpace)
-	return *freeSpace;
+PRIVATE void* getNextLoc(void* freeSpace) {
+	return NEXT (freeSpace);
 }
 
 /*
@@ -27,30 +30,30 @@ PRIVATE void* getPervLoc(void* freeSpace)
 }
 */
 
-PRIVATE long write(void* freeSpace)
+PRIVATE long write(void* freeSpace) {
 	long foo = *(freeSpace - 4);
 	return foo;
 }
 
-PRIVATE long getFreeSize(void* freeSpace)
+PRIVATE long getFreeSize(void* freeSpace) {
 	long foo = *(freeSpace - 4);
 	return foo;
 }
 
 PRIVATE void* allocateIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {
 	if (prev != NULL)
-		*prev = *target;
+		NEXT (prev) = NEXT (target);
 	else 
-		s->firstFree = *target;
+		s->firstFree = NEXT (target);
 	
 	/* splitting */
-	if (*(target - 4) > n_bytes + 4) {
+	if (SIZE (target) > n_bytes + 4) {
 		void* tmp =  target + n_bytes + 4;
-		*tmp = *target;
+		NEXT (tmp) = NEXT (target);
 		
-		*(tmp - 4) = *(target - 4) - n_bytes - 4; 
+		SIZE (tmp) = SIZE (target) - n_bytes - 4; 
 		/* prev now points to the newly splitted block */
-		*prev = tmp;
+		NEXT (prev) = tmp;
 	}
 	return target;
 }
@@ -65,7 +68,7 @@ PRIVATE void* prevFree(struct space* s, void* region) {
 			return prevFreeBlock;
 		}
 		prevFreeBlock = currFreeBlock;
-		currFreeBlock = *currFreeBlock;
+		currFreeBlock = NEXT (currFreeBlock);
 	} while (currFreeBlock != NULL);
 	return prevFreeBlock;
 }
@@ -79,7 +82,7 @@ PRIVATE void* nextFree(struct space* s, void* region) {
 			return currentFreeBlock;
 		}
 		prevFreeBlock = currFreeBlock;
-		currFreeBlock = *currFreeBlock;
+		currFreeBlock = NEXT (currFreeBlock);
 	} while (currFreeBlock != NULL);
 	return NULL;
 }
@@ -92,7 +95,7 @@ PRIVATE void* leftAdjacent(struct space* s, void* region) {
 		if (currFreeBlock + getFreeSize(currFreeBlock) == region - 4) {
 			return currFreeBlock;
 		}
-		currFreeBlock = *currFreeBlock;
+		currFreeBlock = NEXT (currFreeBlock);
 	} while (currFreeBlock != NULL);
 	else NULL;
 }
@@ -104,14 +107,14 @@ PRIVATE void* rightAdjacent(struct space* s, void* region) {
 		if (region + getFreeSize(region) == currFreeBlock - 4) {
 			return currFreeBlock;
 		}
-		currFreeBlock = *currFreeBlock;
+		currFreeBlock = NEXT (currFreeBlock);
 	} while (currFreeBlock != NULL);
 	else NULL;
 }
 
 /*
  this is what a free list item looks like: 
-[ freespace (4 bytes) | previous (4 bytes) | nextfree (4 bytes) | ... ]
+[ freespace (4 bytes) | next (4 bytes) | data (n bytes) ]
 */
 PRIVATE int fmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	int i;
@@ -148,7 +151,7 @@ PRIVATE int fmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	pervFreeSpace = s->firstFree;
 	*/
 	
-	*s->firstFree = NULL;
+	NEXT (s->firstFree) = NULL;
 	
 	/* TODO: factor out handler assignnment to the meminit switch function */
 	/* assign a handler to our space struct*/
@@ -278,32 +281,32 @@ PUBlIC void fmemfree(void* region) {
 			struct space* s = spaces[i];
 			
 			/* clean some space*/
-			memest(region, 0, *(region - 4));
+			memset(region, 0, *(region - 4));
 			
 			void* left = leftFree(s, region);
 			void* right = rightFree(s, region);
 			
 			/*link region after left */
 			if (left)
-				*left = region;
+				NEXT (left) = region;
 			/*link region before right*/
-			*region = right;
+			NEXT (region) = right;
 			
 			void* leftAdj = leftAdjacent(s, region);
-			void * rightAdj = rightAdjacent(s, region);
+			void* rightAdj = rightAdjacent(s, region);
 
 			if (rightAdj) {
-				*(region - 4) += *(rightAdj - 4) + 4;
-				*region = *rightAdj;
+				SIZE (region) += SIZE (rightAdj) + 4;
+				NEXT (region) = NEXT (rightAdj);
 				if (s->nextFree == rightAdj) {
-					s->nextFree = *rightAdj;
+					s->nextFree = NEXT (rightAdj);
 				}
 			}
 			
 			/*increase the free space of left adjcent list */
 			if (leftAdj) {
-				*(leftAdj - 4) += *(region - 4) + 4;
-				*leftAdj = *region;
+				SIZE (leftAdj) += SIZE (region) + 4;
+				NEXT (leftAdj) = NEXT (region);
 				region = leftAdj;
 			}
 			
