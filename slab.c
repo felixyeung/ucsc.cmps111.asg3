@@ -1,6 +1,7 @@
 #include <stdlib.h>
+#include "space.h"
 
-#define PAGESIZE 4096      
+#define PAGESIZE 4096
 
 int min (int* array) {
     int min = array[0];
