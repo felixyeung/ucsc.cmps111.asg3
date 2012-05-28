@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "space.h"
 
 #define PAGESIZE 4096
@@ -57,8 +58,8 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
     newSpace->head = allocBlock
                      + sizeof (struct space)
                      + sizeof (int) * numSlabs
-                     + sizeof (int) * sizeArrayLen;
-                     + sizeof (char) * numSlabs * maxBitmapLen
+                     + sizeof (int) * sizeArrayLen
+                     + sizeof (char) * numSlabs * maxBitmapLen;
     newSpace->end = newSpace->head + n_bytes - 1;
     newSpace->size = n_bytes;
     newSpace->minPageSize = PAGESIZE;
@@ -120,7 +121,7 @@ void* smemalloc (int handle, long n_bytes) {
         for (i = 0; s->sizeArray[i] != 0; i++) {
             if (s->sizeArray[i] >= n_bytes) {
                 if ((fit == 0 || s->sizeArray[i] < fit)
-                            && s->sizeArray[i] > prevFit)) {
+                            && (s->sizeArray[i] > prevFit)) {
                     fit = s->sizeArray[i];
                 }
             }
@@ -131,20 +132,20 @@ void* smemalloc (int handle, long n_bytes) {
             
         // Iterate through size array, looking for an allocated slab of size ==
         // fit
-        for (i = 0; i < numSlabs; i++) {
+        for (i = 0; i < s->numSlabs; i++) {
             if (s->slabs[i] == fit) {
                 // Check to see if there are remaining spaces in the slab
                 int j;
-                numSlabParts = s->slabSize / s->slabs[i];
+                int numSlabParts = s->slabSize / s->slabs[i];
                 for (j = 0; j < numSlabParts; j++) {
-                    if (bitmaps[i][j] == 0) {
+                    if (s->bitmaps[i][j] == 0) {
                         // We're good
                         break;
                     }
                 }
                 if (j < numSlabParts) {
                     // There is a free piece, so use it
-                    bitmaps[i][j] = 1;
+                    s->bitmaps[i][j] = 1;
                     return sGetPointer (s, fit, i, j);
                 }
             }
@@ -154,12 +155,12 @@ void* smemalloc (int handle, long n_bytes) {
          * After the best fit is checked, the results of this code will not
          * change with each iteration.
          */
-        for (i = 0; i < numSlabs; i++) {
+        for (i = 0; i < s->numSlabs; i++) {
             if (s->slabs[i] == 0) {
                 // Unallocated slab
                 // TAKE IT AS YOUR OWN
                 s->slabs[i] = fit;
-                bitmaps[i][0] = 1;
+                s->bitmaps[i][0] = 1;
                 return sGetPointer (s, fit, i, 0);
             }
         }
@@ -167,7 +168,7 @@ void* smemalloc (int handle, long n_bytes) {
 }
 
 void smemfree (struct space* s, void* region) {
-    void* offset = region - s->head;
+    int offset = region - s->head;
     int slabIdx = (int) (offset / s->slabSize);
     int slabOffset = (int) ((offset % s->slabSize) / s->slabs[slabIdx]);
 
