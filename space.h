@@ -43,4 +43,6 @@ struct space {
    int min_page_size; //min size of space
 };
 
+extern struct space* spaces;
+
 #endif

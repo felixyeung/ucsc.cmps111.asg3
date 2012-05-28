@@ -6,6 +6,9 @@
 #define FFLAG 0x04
 #define ALLOC_FLAGS (BFLAG | SFLAG | FFLAG)
 
+struct space* spaces;
+int isSpacesInit = 0;
+
 int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     int handle;
     if (isSpacesInit == 0){
@@ -55,10 +58,10 @@ void *memalloc(int handle, long n_bytes){
     char type;
     void *pointer;
     if (spaces[handle] != NULL){
-	type=spaces[handle]->type;
+	    type = spaces[handle]->type;
     }
     else{
-	 return NULL;
+	    return NULL;
     }
 
    
@@ -88,7 +91,7 @@ void memfree (void *region){
     int i;
     for(i = 0; i < 512; i++){
 	if((region > spaces[i]->head) && (region < spaces[i]->end)){
-		type=spaces[i]->type;
+		type = spaces[i]->type;
 		break;
 	}
     }
