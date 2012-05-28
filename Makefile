@@ -15,7 +15,7 @@ OBJECTS   = ${CSOURCE:.c=.o}
 
 ASGNAME   = asg3
 TAROPT    = -czf
-TAREXT    = tar.gz
+TAREXT    = .tar.gz
 
 RSYNCPATH = ~/private/cs111/${ASGNAME}/
 RSYNCOPT  = -r
@@ -42,4 +42,4 @@ testrun : all
 
 tar : spotless
 	- rm ${ASGNAME}.${TAREXT}
-	tar ${TAROPT} ${ASGNAME}.${TAREXT} ./
+	tar ${TAROPT} ${ASGNAME}${TAREXT} ./
