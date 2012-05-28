@@ -1,35 +1,46 @@
+#include <stdlib.h>
+#include "space.h"
+
+#define BFLAG 0x01
+#define SFLAG 0x02
+#define FFLAG 0x04
+#define ALLOC_FLAGS (BFLAG | SFLAG | FFLAG)
+
 int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     int handle;
     if (isSpacesInit == 0){
         isSpacesInit = 1;
         memset(spaces,0,512);
     }
+    
+    /* Get an empty space */
+    int i;
+    int handle = -1;
+    for (i = 0; i < NUM_SPACES; i++) {
+        if (spaces[i] == NULL) {
+            handle = i;
+            break;
+        }
+    }
+    
+    if (handle == -1) {
+        // No more allocators allowed. Error exit.
+        return handle;
+    }
 
     /* dispatch to the proper init based on flags */
-    switch (flags){
-        case 0x01:
+    switch (flags & ALLOC_FLAGS){
+        case BFLAG:
             //buddy
-            handle=bmeminit(n_bytes, flags, parm1, parm2);
+            handle=bmeminit(handle, n_bytes, flags, parm1, parm2);
 	    break;
-        case 0x02:
+        case SFLAG:
             //slab
-            handle=smeminit(n_bytes, flags, parm1, parm2);
+            handle=smeminit(handle, n_bytes, flags, parm1, parm2);
 	    break;
-        case 0x04:
+        case FFLAG:
             //free list first fit
-            handle=fmeminit(n_bytes, 0x00, parm1, parm2);
-	    break;
-        case 0x0E:
-            //free list next fit
-            handle=fmeminit(n_bytes, 0x08, parm1, parm2);
-	    break;
-        case 0x14:
-            //free list best fit
-            handle=fmeminit(n_bytes, 0x10, parm1, parm2);
-	    break;
-        case 0x1E:
-            //free list worst fit
-            handle=fmeminit(n_bytes, 0x18, parm1, parm2);
+            handle=fmeminit(handle, n_bytes, flags, parm1, parm2);
 	    break;
         default:
             //flag not used

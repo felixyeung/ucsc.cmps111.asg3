@@ -15,21 +15,7 @@ int min (int* array) {
     return min;
 }
 
-int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
-    // Find an open spot in spaces.
-    int i;
-    for (i = 0; i < 512; i++) {
-        if (spaces[i] == NULL) {
-            break;
-        }
-    }
-    
-    int handle = i;
-    if (handle == 512) {
-        // No spot in spaces was empty, so return error.
-        return -1;
-    }
-
+int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
     // Get the size of parm2, to be used when making sizeArray
     int sizeArrayLen = 1;
     while (parm2[sizeArrayLen - 1] != 0) {
@@ -54,7 +40,6 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
     // Initialize the struct.
     struct space* newSpace = allocBlock;
     newSpace->type = 's';
-    newSpace->handle = handle;
     newSpace->head = allocBlock
                      + sizeof (struct space)
                      + sizeof (int) * numSlabs
@@ -94,9 +79,10 @@ int smeminit (long n_bytes, unsigned int flags, int parm1, int* parm2) {
     memset (newSpace->bitmaps, 0, numSlabs * maxBitmapLen);
     
     // Add newSpace to spaces.
-    spaces[handle] = newSpace;
+    newSpace->handle = handle;
+    spaces[newSpace->handle] = newSpace;
     
-    return handle;
+    return newSpace->handle;
 } 
 
 void* sGetPointer (struct space* s, int objSize, int slabIdx, int slabOffset) {

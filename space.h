@@ -1,6 +1,8 @@
 #ifndef SPACE_H
 #define SPACE_H
 
+#define NUM_SPACES 512
+
 struct space {
    char type; //'b' for buddy, 's' for slab, 'f' for free list
 

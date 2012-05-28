@@ -67,7 +67,7 @@ PRIVATE void freeAndMergeBuddies(void* maps, int mapIdx, int b1) {
 	}
 }
 
-PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
+PUBLIC int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	int i;
 	
 	/* This is the maximum number of pages we can get from n bytes, where parm1 is the minimum size of a page */
@@ -135,19 +135,20 @@ PUBLIC int bmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	
 	/* assign a handler to our space struct*/
 	
-	int handler;
+//	int handler;
 	/* 512 is the max number of allocators we can have at once */
-	for (i = 0; i < 512; i++) {
-		if (spaces[i] != NULL) {
-			handler = i;
-			spaces[i] = s;
-			break;
-		}
-	}
+//	for (i = 0; i < 512; i++) {
+//		if (spaces[i] != NULL) {
+//			handler = i;
+//			spaces[i] = s;
+//			break;
+//		}
+//	}
 	
-	s->handler = handler;
+	s->handle = handle;
+	spaces[s->handle] = s;
 	
-	return s->handler;
+	return s->handle;
 }
 
 PUBLIC void* bmemalloc(int handler, long n_bytes) {

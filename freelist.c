@@ -2,6 +2,12 @@
 #include <math.h>
 #include "space.h"
 
+#define FF 0x00
+#define NF 0x08
+#define BF 0x10
+#define WF 0x18
+#define LIST_TYPE_FLAGS (FF | NF | BF | WF)
+
 #define SIZE( _p ) (*((int*) (_p - 4)))
 #define NEXT( _p ) (*((void**) (_p)))
 // #define begin {
@@ -116,7 +122,7 @@ PRIVATE void* rightAdjacent(struct space* s, void* region) {
  this is what a free list item looks like: 
 [ freespace (4 bytes) | next (4 bytes) | data (n bytes) ]
 */
-PRIVATE int fmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
+PRIVATE int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	int i;
 	//Our space model and actual free spaces are allocated here.
 	size_t totalSpace = sizeof(struct space) + n_bytes;
@@ -125,7 +131,7 @@ PRIVATE int fmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	
 	
 	/* point to space model and free space, we have no bitmaps for freelist!*/
-	struct space* s = tmp_front;
+	struct space* s = (struct space*) tmp_front;
 	tmp_front += sizeof(struct space);
 	
 	/* start of free space */
@@ -134,11 +140,14 @@ PRIVATE int fmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	s->size = n_bytes;
 	
 	/* now, put out metadata of how much freespace into */ 
-	*s->head = getUsableSpace(n_bytes);
+	NEXT (s->head) = getUsableSpace(n_bytes);
 	
 	/* during init, we only have one item in our list of free spaces */
 	s->firstFree = s->head + 4;
 	s->nextFree = s->firstFree;
+	
+	/* Init the listtype field */
+	s->listType = flags & LIST_TYPE_FLAGS;
 	
 	/* 
 	find the actual usable space, then place into it the next chuck of free ,space
@@ -156,19 +165,20 @@ PRIVATE int fmeminit(long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	/* TODO: factor out handler assignnment to the meminit switch function */
 	/* assign a handler to our space struct*/
 	
-	int handler;
+//	int handler;
 	/* 512 is the max number of allocators we can have at once */
-	for (i = 0; i < 512; i++) {
-		if (spaces[i] != NULL) {
-			handler = i;
-			spaces[i] = s;
-			break;
-		}
-	}
+//	for (i = 0; i < 512; i++) {
+//		if (spaces[i] != NULL) {
+//			handler = i;
+//			spaces[i] = s;
+//			break;
+//		}
+//	}
 	
-	s->handler = handler;
+	s->handle = handle;
+	spaces[s->handle] = s;
 	
-	return s->handler;
+	return s->handle;
 }
 
 PUBLIC void* fmemalloc(int handler, long n_bytes) {
