@@ -35,14 +35,6 @@ struct space {
    int* slabs; // Array corresponding to the set of slabs
 
    int slabSize; // Size of a slab
-   
-   void *end; // pointer to end of mem space
-
-   int size; //size of space
-
-   void *bitmaps; /*pointer to an array of pointers to bitmaps,used in Buddy alloc*/
-
-   int numBitmaps; /*how many bitmaps are we using? used in Buddy alloc*/
 
    void *first_free; //used in SLAB  and Free list
 
