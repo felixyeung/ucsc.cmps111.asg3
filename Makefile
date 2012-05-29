@@ -4,6 +4,8 @@
 CSOURCE   = slab.c freelist.c buddy.c allocation.c
 CHEADER   = space.h
 
+TESTSRC   = test1.c
+
 LIBRARY   = libmem.a
 AROPT     = rvs
 
@@ -38,7 +40,8 @@ sync :
 	rsync ${RSYNCOPT} qrivers@unix.ic.ucsc.edu:${RSYNCPATH} ./
 
 testrun : all
-	- echo "No test code yet!."
+	gcc test1.c libmem.a -o test1
+	./test1
 
 tar : spotless
 	- rm ${ASGNAME}.${TAREXT}
