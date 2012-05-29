@@ -1,48 +1,45 @@
 #ifndef SPACE_H
 #define SPACE_H
 
-#define NUM_SPACES 512
+#define NUM_SPACES 512 
 
 struct space {
-   char type; //'b' for buddy, 's' for slab, 'f' for free list
+    char type; //'b' for buddy, 's' for slab, 'f' for free list
 
-   int handle; //handle number
+    int handle; //handle number
 
-   void *head; //pointer to start of mem space
+    void *head; //pointer to start of mem space
 
-   void *end; // pointer to the last byte of mem space
+    void *end; // pointer to the last byte of mem space
 
-   int size; //size of space
+    int size; //size of space
 
-   void *bitmaps; /* pointer to an array of pointers to bitmaps, used in
-                   * Buddy and slab alloc
-                   */
+    int minPageSize; //min size of space, used for buddy and slab
+    
+    /*** buddy allocator ***/
+    int numBitmaps; // how many bitmaps are we using?
+    
+    char**** bitmaps; // pointer to an array of bitmaps.
 
-   int numBitmaps; /* how many bitmaps are we using? used in Buddy and
-                    * slab alloc
-                    */
+    /*** freelist allocator ***/
+    int listType; // Type of freelist allocator
 
-   int listType; //Used for freelist
+    void *firstFree; // First free space in the freelist
 
-   void *firstFree; //used in SLAB  and Free list
+    void *nextFree; //used in next fit
+    
+    /*** slab allocator ***/
+    int* sizeArray; /* Array of object sizes to be allocated (for slab). Like
+                     * parm2, it is NULL-terminated.
+                     */
 
-   void *nextFree; //used in next fit
+    int numSlabs; // Size of the slab array
 
-   int minPageSize; //min size of space
+    int* slabs; // Array corresponding to the set of slabs
 
-   int* sizeArray; // Array of object sizes to be allocated (for slab)
-
-   int numSlabs; // Size of the slab array
-
-   int* slabs; // Array corresponding to the set of slabs
-
-   int slabSize; // Size of a slab
-
-   void *first_free; //used in SLAB  and Free list
-
-   int min_page_size; //min size of space
+    int slabSize; // Size of a slab
 };
 
-extern struct space* spaces;
+extern struct space** spaces;
 
 #endif
