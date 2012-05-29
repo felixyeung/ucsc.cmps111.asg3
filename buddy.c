@@ -2,20 +2,20 @@
 #include <math.h>
 #include "space.h"
 
-PRIVATE int isPowerOfTwo (unsigned int x) {
+int isPowerOfTwo (unsigned int x) {
  while (((x % 2) == 0) && x > 1) /* While x is even and > 1 */
    x /= 2;
  return (x == 1);
 }
 
-PRIVATE void markDown(long n_bytes, void* maps, int mapIdx, int blockIdx, int blockSize) {
+void markDown(long n_bytes, void* maps, int mapIdx, int blockIdx, int blockSize) {
 	if (n_bytes <= blockSize) {
 		maps[mapIdx][blockIdx] = 1;
 		markDown(n_bytes, maps, mapIdx + 1, blockIdx * 2, blockSize / 2);
 	}
 }
 
-PRIVATE void* allocAndMark(long n_bytes, void* maps, int mapIdx, int blockIdx, int blockSize) {
+void* allocAndMark(long n_bytes, void* maps, int mapIdx, int blockIdx, int blockSize) {
 	int mapSize = 2 ^ mapIdx + 1;
 	int j;
 	for (j = blockIndx; j < mapSize; j++) {
@@ -46,7 +46,7 @@ PRIVATE void* allocAndMark(long n_bytes, void* maps, int mapIdx, int blockIdx, i
 	}
 }
 
-PRIVATE void freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
+void freeAndMergeBuddies(void* maps, int mapIdx, int b1) {	
 	/*first free the first buddy */
 	
 	map[mapIdx][b1] = 0;
@@ -67,7 +67,7 @@ PRIVATE void freeAndMergeBuddies(void* maps, int mapIdx, int b1) {
 	}
 }
 
-PUBLIC int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
+int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	int i;
 	
 	/* This is the maximum number of pages we can get from n bytes, where parm1 is the minimum size of a page */
@@ -151,7 +151,7 @@ PUBLIC int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int
 	return s->handle;
 }
 
-PUBLIC void* bmemalloc(int handler, long n_bytes) {
+void* bmemalloc(int handler, long n_bytes) {
 	int i;
 	/* 512 is the max number of allocators we can have at once */
 	struct space* s;
@@ -231,7 +231,7 @@ for map in bitmaps:
 		if head + (i * blocksize):
 			free;
 */
-PUBlIC void bmemfree(void* region) {
+void bmemfree(void* region) {
 	int i;
 	/* capture the space where region resides */
 	for (i = 0; i < 512; i++) {
@@ -246,7 +246,7 @@ PUBlIC void bmemfree(void* region) {
 			for (j = s->numBitMaps - 1; j >= 0; j--) {
 				// for our bit map, look at each block and see if our region starts there.
 				int* map = s->bitmaps[j];
-				int lengthOfMap = 2 ^ j';
+				int lengthOfMap = 2 ^ j;
 				int k;
 				for (k = 0; k < lengthOfMap -1; k++) {
 					/* if  region is found and it's marked as 1 */

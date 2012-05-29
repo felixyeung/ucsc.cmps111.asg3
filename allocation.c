@@ -6,14 +6,15 @@
 #define FFLAG 0x04
 #define ALLOC_FLAGS (BFLAG | SFLAG | FFLAG)
 
-struct space* spaces;
+struct space* spaces[512];
 int isSpacesInit = 0;
 
 int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     int handle;
     if (isSpacesInit == 0){
         isSpacesInit = 1;
-        memset(spaces,0,512);
+        //spaces = (struct space**) malloc (sizeof (struct space*) * NUM_SPACES);
+        memset(spaces, 0, sizeof (struct space*) * NUM_SPACES);
     }
     
     /* Get an empty space */
@@ -57,6 +58,8 @@ int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
 void *memalloc(int handle, long n_bytes){
     char type;
     void *pointer;
+    if (handle < 0 || handle >= NUM_SPACES)
+        return NULL;
     if (spaces[handle] != NULL){
 	    type = spaces[handle]->type;
     }

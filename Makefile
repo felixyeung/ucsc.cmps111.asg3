@@ -1,9 +1,8 @@
 # qrivers@ucsc.edu
 # Based in part on a Makefile by Prof. W. Mackey
 
-CSOURCE   = slab.c buddy.c freelist.c allocation.c
-#CHEADER   = 
-FILES     = ${CSOURCE} Makefile README design.pdf
+CSOURCE   = slab.c freelist.c buddy.c allocation.c
+CHEADER   = space.h
 
 LIBRARY   = libmem.a
 AROPT     = rvs
@@ -13,6 +12,7 @@ OBJECTS   = ${CSOURCE:.c=.o}
 #EXECBIN   =
 # TESTOPT   = 
 
+FILES     = ${CSOURCE} ${CHEADER} Makefile README design.pdf report.pdf
 ASGNAME   = asg3
 TAROPT    = -czf
 TAREXT    = .tar.gz

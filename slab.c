@@ -38,7 +38,7 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
     void* allocBlock = malloc (bytesToAlloc);
     
     // Initialize the struct.
-    struct space* newSpace = allocBlock;
+    struct space* newSpace = (struct space*) allocBlock;
     newSpace->type = 's';
     newSpace->head = allocBlock
                      + sizeof (struct space)
@@ -66,6 +66,7 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
     newSpace->nextFree = NULL;
     
     // Each slab should be unallocated, so mark it as such.
+    int i;
     for (i = 0; i < newSpace->numSlabs; i++) {
         newSpace->slabs[i] = 0;
     }
@@ -93,7 +94,7 @@ void* sGetPointer (struct space* s, int objSize, int slabIdx, int slabOffset) {
 }
 
 void* smemalloc (int handle, long n_bytes) {
-    struct space* s = spaces[handle];
+    struct space* s = (struct space*) spaces[handle];
     
     // Find the best fit from the array of sizes available.
     int fit = 0;

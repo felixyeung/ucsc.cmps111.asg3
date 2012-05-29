@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "space.h"
 
@@ -14,7 +15,7 @@
 // #define end ;}
 
 /* This function simply -4 from a list item*/
-PRIVATE long getUsableSize(void* itemSpace) {
+long getUsableSize(void* itemSpace) {
 	return SIZE (itemSpace);
 }
 
@@ -22,31 +23,26 @@ PRIVATE long getUsableSize(void* itemSpace) {
  Return pointer to the start of actual freespace 
 we waste 8 bytes, but who cares?
 */
-PRIVATE void* getUsableLoc(void* freeSpace) {
-	return *freeSpace;
+void* getUsableLoc(void* freeSpace) {
+	return NEXT (freeSpace);
 }
 
-PRIVATE void* getNextLoc(void* freeSpace) {
+void* getNextLoc(void* freeSpace) {
 	return NEXT (freeSpace);
 }
 
 /*
-PRIVATE void* getPervLoc(void* freeSpace)
+void* getPervLoc(void* freeSpace)
 	return freeSpace + 4;
 }
 */
 
-PRIVATE long write(void* freeSpace) {
-	long foo = *(freeSpace - 4);
+long getFreeSize(void* freeSpace) {
+	long foo = SIZE (freeSpace);
 	return foo;
 }
 
-PRIVATE long getFreeSize(void* freeSpace) {
-	long foo = *(freeSpace - 4);
-	return foo;
-}
-
-PRIVATE void* allocateIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {
+void* allocIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {
 	if (prev != NULL)
 		NEXT (prev) = NEXT (target);
 	else 
@@ -65,7 +61,7 @@ PRIVATE void* allocateIntoBlock(struct space* s, void* prev , void* target, long
 }
 
 /*capture last free block to the left of region */
-PRIVATE void* prevFree(struct space* s, void* region) {
+void* prevFree(struct space* s, void* region) {
 	void* currFreeBlock = s->firstFree;
 	void* prevFreeBlock = NULL;
 	do {
@@ -79,13 +75,13 @@ PRIVATE void* prevFree(struct space* s, void* region) {
 	return prevFreeBlock;
 }
 
-PRIVATE void* nextFree(struct space* s, void* region) {
+void* nextFree(struct space* s, void* region) {
 	void* currFreeBlock = s->firstFree;
 	void* prevFreeBlock = NULL;
 	do {
 		/* resolve the start of the block (used or un used) */
 		if (region < currFreeBlock && region > prevFreeBlock) {
-			return currentFreeBlock;
+			return currFreeBlock;
 		}
 		prevFreeBlock = currFreeBlock;
 		currFreeBlock = NEXT (currFreeBlock);
@@ -94,7 +90,7 @@ PRIVATE void* nextFree(struct space* s, void* region) {
 }
 
 /* discover the left adjacent free block to region, if exists */
-PRIVATE void* leftAdjacent(struct space* s, void* region) {
+void* leftAdjacent(struct space* s, void* region) {
 	void* currFreeBlock = s->firstFree;
 	do {
 		/* resolve the start of the block (used or un used) */
@@ -103,10 +99,10 @@ PRIVATE void* leftAdjacent(struct space* s, void* region) {
 		}
 		currFreeBlock = NEXT (currFreeBlock);
 	} while (currFreeBlock != NULL);
-	else NULL;
+	return NULL;
 }
 
-PRIVATE void* rightAdjacent(struct space* s, void* region) {
+void* rightAdjacent(struct space* s, void* region) {
 	void* currFreeBlock = s->firstFree;
 	do {
 		/* resolve the start of the block (used or un used) */
@@ -115,15 +111,14 @@ PRIVATE void* rightAdjacent(struct space* s, void* region) {
 		}
 		currFreeBlock = NEXT (currFreeBlock);
 	} while (currFreeBlock != NULL);
-	else NULL;
+	return NULL;
 }
 
 /*
  this is what a free list item looks like: 
 [ freespace (4 bytes) | next (4 bytes) | data (n bytes) ]
 */
-PRIVATE int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
-	int i;
+int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	//Our space model and actual free spaces are allocated here.
 	size_t totalSpace = sizeof(struct space) + n_bytes;
 	void* myBigBlock = malloc(totalSpace);
@@ -139,12 +134,11 @@ PRIVATE int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, in
 	s->end = s->head + n_bytes - 1;
 	s->size = n_bytes;
 	
-	/* now, put out metadata of how much freespace into */ 
-	NEXT (s->head) = getUsableSpace(n_bytes);
-	
 	/* during init, we only have one item in our list of free spaces */
 	s->firstFree = s->head + 4;
 	s->nextFree = s->firstFree;
+	
+	SIZE (s->firstFree) = n_bytes - 4;
 	
 	/* Init the listtype field */
 	s->listType = flags & LIST_TYPE_FLAGS;
@@ -181,19 +175,9 @@ PRIVATE int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, in
 	return s->handle;
 }
 
-PUBLIC void* fmemalloc(int handler, long n_bytes) {
-	/* First, find the handler */
-	int i;
+void* fmemalloc(int handle, long n_bytes) {
 	/* 512 is the max number of allocators we can have at once */
-	struct space* s;
-	
-	for (i = 0; i < 512; i++) {
-		if (spaces[i]->handler == handler) {
-			s =  spaces[i];
-			break;
-		}
-		return NULL;
-	}
+	struct space* s = spaces[handle];
 
 	/* iterate over the list until we see that the next free slot points back to front */
 	void* currFree;
@@ -222,23 +206,24 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 	void* theWorstPrev;
 	long theWorstSize;
 	
+	void* region = NULL;
 	switch (s->listType) {
-		case 0x0:
+		case FF:
 			do {
 				if (getFreeSize(currFree) >= n_bytes) {
 					/* If we have a previous free block, we have to set its
 					next pointer to the new free block*/
-					allocIntoBlock(s, prev, currFree, n_bytes);
+					region = allocIntoBlock(s, prev, currFree, n_bytes);
 				}
 				
 				prev = currFree;
 				currFree = getNextLoc(currFree);
 			} while (currFree != start);
 		break;
-		case 0x08:
+		case NF:
 			do {
 				if (getFreeSize(currFree) >= n_bytes) {
-					allocIntoBlock(s, prev, currFree, n_bytes);
+					region = allocIntoBlock(s, prev, currFree, n_bytes);
 				}
 				
 				prev = currFree;
@@ -247,7 +232,7 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 					currFree = s->firstFree;
 			} while (currFree != start);
 		break;
-		case 0x10:
+		case BF:
 			do {
 				if (getFreeSize(currFree) >= n_bytes && getUsableSize(currFree) < theBestSize) {
 					theBest = currFree;
@@ -258,7 +243,7 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 				currFree = getNextLoc(currFree);
 			} while (currFree != start);
 		break;
-		case 0x18;
+		case WF:
 			do {
 				if (getFreeSize(currFree) >= n_bytes && getUsableSize(currFree) > theWorstSize) {
 					theWorst = currFree;
@@ -273,17 +258,19 @@ PUBLIC void* fmemalloc(int handler, long n_bytes) {
 	
 	/* Actual allocation happens out here for best and worst fit since we need to read the entire array */
 	if (s->listType == 0x08) {
-		allocIntoBlock(s, theBestPrev, theBest, n_bytes);
+		region = allocIntoBlock(s, theBestPrev, theBest, n_bytes);
 	}
 	if (s->listType == 0x18) {
-		allocIntoBlock(s, theWorstPrev, theWorst, n_bytes);
+		region = allocIntoBlock(s, theWorstPrev, theWorst, n_bytes);
 	}
+	
+	return region;
 }
 
 /*
 We need to free the list and merge it with adjacent lists
 */
-PUBlIC void fmemfree(void* region) {
+void fmemfree(void* region) {
 	int i;
 	/* capture the space where region resides */
 	for (i = 0; i < 512; i++) {
@@ -291,10 +278,10 @@ PUBlIC void fmemfree(void* region) {
 			struct space* s = spaces[i];
 			
 			/* clean some space*/
-			memset(region, 0, *(region - 4));
+			memset(region, 0, SIZE (region));
 			
-			void* left = leftFree(s, region);
-			void* right = rightFree(s, region);
+			void* left = prevFree(s, region);
+			void* right = nextFree(s, region);
 			
 			/*link region after left */
 			if (left)
@@ -321,7 +308,7 @@ PUBlIC void fmemfree(void* region) {
 			}
 			
 			if (region < s->firstFree)
-				s->fristFree = region;
+				s->firstFree = region;
 		}
 	}
 }

@@ -14,12 +14,15 @@ struct space {
 
     int size; //size of space
 
-    int minPageSize; //min size of space, used for buddy and slab
+    /*** buddy and slab allocators ***/
+    int minPageSize; //min size of space
+    
+    int numBitmaps; // how many bitmaps are we using
+    
+    char** bitmaps; // pointer to an array of bitmaps.
     
     /*** buddy allocator ***/
-    int numBitmaps; // how many bitmaps are we using?
-    
-    char**** bitmaps; // pointer to an array of bitmaps.
+    // Nothing exclusive
 
     /*** freelist allocator ***/
     int listType; // Type of freelist allocator
@@ -37,7 +40,7 @@ struct space {
 
     int* slabs; // Array corresponding to the set of slabs
 
-    int slabSize; // Size of a slab
+    int slabSize; // Size of a slab, in bytes
 };
 
 extern struct space** spaces;
