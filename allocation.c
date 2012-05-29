@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "space.h"
 
 #define BFLAG 0x01
@@ -6,7 +7,7 @@
 #define FFLAG 0x04
 #define ALLOC_FLAGS (BFLAG | SFLAG | FFLAG)
 
-struct space* spaces[512];
+struct space* spaces[NUM_SPACES];
 int isSpacesInit = 0;
 
 int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
@@ -19,7 +20,7 @@ int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     
     /* Get an empty space */
     int i;
-    int handle = -1;
+    handle = -1;
     for (i = 0; i < NUM_SPACES; i++) {
         if (spaces[i] == NULL) {
             handle = i;
@@ -69,17 +70,17 @@ void *memalloc(int handle, long n_bytes){
 
    
     switch (type){
-        case b:
+        case 'b':
             //buddy allocation
-            pointer=bmemalloc(handle, n_bytes);
+            pointer = bmemalloc(handle, n_bytes);
 	    break;
-        case s:
+        case 's':
             //slab allocation
-            pointer=smemalloc(handle, n_bytes);
+            pointer = smemalloc(handle, n_bytes);
 	    break;
-        case f:
+        case 'f':
             //free list allocation
-            pointer=fmemalloc(handle, n_bytes);
+            pointer = fmemalloc(handle, n_bytes);
 	    break;
         default:
             //no allocation
@@ -100,13 +101,13 @@ void memfree (void *region){
     }
 
     switch (type){
-        case b:
+        case 'b':
             bmemfree(region);
 	    break;	
-        case s:
+        case 's':
             smemfree(region);
 	    break;
-        case f:
+        case 'f':
             fmemfree(region);
 	    break;
         default:

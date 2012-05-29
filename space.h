@@ -43,6 +43,6 @@ struct space {
     int slabSize; // Size of a slab, in bytes
 };
 
-extern struct space** spaces;
+extern struct space* spaces[NUM_SPACES];
 
 #endif
