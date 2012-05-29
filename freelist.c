@@ -130,6 +130,7 @@ int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2
 	tmp_front += sizeof(struct space);
 	
 	/* start of free space */
+    s->type = 'f';
 	s->head = tmp_front;
 	s->end = s->head + n_bytes - 1;
 	s->size = n_bytes;

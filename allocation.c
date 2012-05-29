@@ -12,14 +12,16 @@ int isSpacesInit = 0;
 
 int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     int handle;
-    if (isSpacesInit == 0){
+    int i;
+    if (isSpacesInit == 0) {
         isSpacesInit = 1;
         //spaces = (struct space**) malloc (sizeof (struct space*) * NUM_SPACES);
-        memset(spaces, 0, sizeof (struct space*) * NUM_SPACES);
+        for (i = 0; i < NUM_SPACES; i++) {
+            spaces[i] = NULL;
+        }
     }
     
     /* Get an empty space */
-    int i;
     handle = -1;
     for (i = 0; i < NUM_SPACES; i++) {
         if (spaces[i] == NULL) {
@@ -37,19 +39,19 @@ int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     switch (flags & ALLOC_FLAGS){
         case BFLAG:
             //buddy
-            handle=bmeminit(handle, n_bytes, flags, parm1, parm2);
+            handle = bmeminit(handle, n_bytes, flags, parm1, parm2);
 	    break;
         case SFLAG:
             //slab
-            handle=smeminit(handle, n_bytes, flags, parm1, parm2);
+            handle = smeminit(handle, n_bytes, flags, parm1, parm2);
 	    break;
         case FFLAG:
             //free list first fit
-            handle=fmeminit(handle, n_bytes, flags, parm1, parm2);
+            handle = fmeminit(handle, n_bytes, flags, parm1, parm2);
 	    break;
         default:
             //flag not used
-            handle=-1;
+            return -1;
 	    break;
     }
     return handle;
@@ -62,12 +64,12 @@ void *memalloc(int handle, long n_bytes){
     if (handle < 0 || handle >= NUM_SPACES)
         return NULL;
     if (spaces[handle] != NULL){
+        printf ("space %d: %p\n", handle, spaces[handle]);
 	    type = spaces[handle]->type;
     }
     else{
 	    return NULL;
     }
-
    
     switch (type){
         case 'b':

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -122,6 +123,8 @@ int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2
 	}
 	
 	/* THIS IS WHERE ACTUAL DATA GOES */
+    s->type = 'b';
+    
 	s->head = tmp_front;
 	
 	s->end = s->head + n_bytes - 1;
@@ -136,16 +139,6 @@ int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2
 	s->firstFree = NULL;
 	
 	/* assign a handler to our space struct*/
-	
-//	int handler;
-	/* 512 is the max number of allocators we can have at once */
-//	for (i = 0; i < 512; i++) {
-//		if (spaces[i] != NULL) {
-//			handler = i;
-//			spaces[i] = s;
-//			break;
-//		}
-//	}
 	
 	s->handle = handle;
 	spaces[s->handle] = s;

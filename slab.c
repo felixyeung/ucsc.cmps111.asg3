@@ -33,6 +33,7 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
     int bytesToAlloc = sizeof (struct space)
                        + sizeof (int) * sizeArrayLen
                        + sizeof (int) * numSlabs
+                       + sizeof (char*) * numSlabs
                        + sizeof (char) * numSlabs * maxBitmapLen
                        + n_bytes;
     void* allocBlock = malloc (bytesToAlloc);
@@ -44,6 +45,7 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
                      + sizeof (struct space)
                      + sizeof (int) * numSlabs
                      + sizeof (int) * sizeArrayLen
+                     + sizeof (char*) * numSlabs
                      + sizeof (char) * numSlabs * maxBitmapLen;
     newSpace->end = newSpace->head + n_bytes - 1;
     newSpace->size = n_bytes;
@@ -59,6 +61,7 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
                         + sizeof (int) * numSlabs
                         + sizeof (int) * sizeArrayLen;
     newSpace->numBitmaps = numSlabs;
+    newSpace->slabSize = slabSize;
     
     // Fields we won't be using.
     newSpace->listType = 0;
@@ -76,8 +79,16 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
         newSpace->sizeArray[i] = parm2[i];
     }
     
-    // Zero out the bitmaps
-    memset (newSpace->bitmaps, 0, numSlabs * maxBitmapLen);
+    // Point bitmaps at all the bitmaps
+    void *startptr = ((void*) newSpace->bitmaps) + sizeof (char*) * numSlabs;
+    int j;
+    for (i = 0; i < newSpace->numBitmaps; i++) {
+        newSpace->bitmaps[i] = (char*) startptr;
+        for (j = 0; j < maxBitmapLen; j++) {
+            newSpace->bitmaps[i][j] = 0;
+        }
+        startptr += sizeof (char) * maxBitmapLen;
+    }
     
     // Add newSpace to spaces.
     newSpace->handle = handle;
@@ -88,8 +99,8 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
 
 void* sGetPointer (struct space* s, int objSize, int slabIdx, int slabOffset) {
     void* ptr = s->head;
-    ptr += s->slabSize * slabIdx;
-    ptr += objSize * slabOffset;
+    ptr = ptr + (s->slabSize * slabIdx);
+    ptr = ptr + (objSize * slabOffset);
     return ptr;
 }
 
@@ -116,7 +127,7 @@ void* smemalloc (int handle, long n_bytes) {
         if (fit == 0)
             // Then there is no size left unchecked.
             return NULL;
-            
+        
         // Iterate through size array, looking for an allocated slab of size ==
         // fit
         for (i = 0; i < s->numSlabs; i++) {
