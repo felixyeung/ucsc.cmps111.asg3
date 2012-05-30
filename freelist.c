@@ -188,16 +188,15 @@ void* fmemalloc(int handle, long n_bytes) {
 	
 	void* theBest;
 	void* theBestPrev;
-	long theBestSize;
+	long theBestSize = -1;
 	
 	void* theWorst;
 	void* theWorstPrev;
-	long theWorstSize;
+	long theWorstSize = -1;
 	
 	void* region = NULL;
 	switch (s->listType) {
 		case FF:
-		    printf ("FF\n");
 			do {
 				if (getFreeSize(currFree) >= n_bytes) {
 					/* If we have a previous free block, we have to set its
@@ -211,7 +210,6 @@ void* fmemalloc(int handle, long n_bytes) {
 			} while (currFree != NULL);
 		break;
 		case NF:
-		    printf ("NF\n");
 			do {
 				if (getFreeSize(currFree) >= n_bytes) {
 					region = allocIntoBlock(s, prev, currFree, n_bytes);
@@ -225,26 +223,26 @@ void* fmemalloc(int handle, long n_bytes) {
 			} while (currFree != start);
 		break;
 		case BF:
-		    printf ("BF\n");
 			do {
-				if (getFreeSize(currFree) >= n_bytes && getUsableSize(currFree) < theBestSize) {
+				if ((getFreeSize (currFree) >= n_bytes)
+                            && ((getFreeSize (currFree) < theBestSize)
+                            || (theBestSize == -1))) {
 					theBest = currFree;
-					printf ("b: %p\n", prev);
 					theBestPrev = prev;
-					theBestSize = getUsableSize(currFree);
+					theBestSize = getFreeSize (currFree);
 				}
 				prev = currFree;
 				currFree = getNextLoc(currFree);
 			} while (currFree != NULL);
 		break;
 		case WF:
-		    printf ("WF\n");
 			do {
-				if (getFreeSize(currFree) >= n_bytes && getUsableSize(currFree) > theWorstSize) {
-					theWorst = currFree;
-					printf ("w: %p\n", currFree);
-					theWorstPrev= prev;
-					theWorstSize = getUsableSize(currFree);
+				if ((getFreeSize (currFree) >= n_bytes)
+                            && ((getFreeSize (currFree) > theWorstSize)
+                            || (theWorstSize == -1))) {
+                    theWorst = currFree;
+					theWorstPrev = prev;
+					theWorstSize = getFreeSize (currFree);
 				}
 				prev = currFree;
 				currFree = getNextLoc(currFree);
