@@ -22,7 +22,7 @@ TAREXT    = .tar.gz
 RSYNCPATH = ~/private/cs111/${ASGNAME}/
 RSYNCOPT  = -r
 
-TESTFILE  = test_init
+TESTFILE  = test_alloc
 
 all : ${LIBRARY} clean
 
