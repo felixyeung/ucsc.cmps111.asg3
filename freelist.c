@@ -186,12 +186,12 @@ void* fmemalloc(int handle, long n_bytes) {
 		0x18 worst fit
 	*/
 	
-	void* theBest;
-	void* theBestPrev;
+	void* theBest = NULL;
+	void* theBestPrev = NULL;
 	long theBestSize = -1;
 	
-	void* theWorst;
-	void* theWorstPrev;
+	void* theWorst = NULL;
+	void* theWorstPrev = NULL;
 	long theWorstSize = -1;
 	
 	void* region = NULL;
@@ -252,9 +252,13 @@ void* fmemalloc(int handle, long n_bytes) {
     
 	/* Actual allocation happens out here for best and worst fit since we need to read the entire array */
 	if (s->listType == 0x10) {
+        if (theBest == NULL)
+            return NULL;
 		region = allocIntoBlock(s, theBestPrev, theBest, n_bytes);
 	}
 	if (s->listType == 0x18) {
+        if (theWorst == NULL)
+            return NULL;
 		region = allocIntoBlock(s, theWorstPrev, theWorst, n_bytes);
 	}
 	
