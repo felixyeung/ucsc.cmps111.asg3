@@ -42,12 +42,7 @@ long getFreeSize(void* freeSpace) {
 	return foo;
 }
 
-void* allocIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {
-	if (prev != NULL)
-		NEXT (prev) = NEXT (target);
-	else 
-		s->firstFree = NEXT (target);
-	
+void* allocIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {	
 	/* splitting */
 	if (SIZE (target) > n_bytes + 4) {
 		void* tmp =  target + n_bytes + 4;
@@ -55,8 +50,12 @@ void* allocIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {
 		
 		SIZE (tmp) = SIZE (target) - n_bytes - 4; 
 		/* prev now points to the newly splitted block */
-		NEXT (prev) = tmp;
+    	if (prev != NULL)
+    		NEXT (prev) = tmp;
+    	else 
+    		s->firstFree = tmp;
 	}
+	
 	return target;
 }
 
@@ -157,19 +156,6 @@ int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2
 	
 	NEXT (s->firstFree) = NULL;
 	
-	/* TODO: factor out handler assignnment to the meminit switch function */
-	/* assign a handler to our space struct*/
-	
-//	int handler;
-	/* 512 is the max number of allocators we can have at once */
-//	for (i = 0; i < 512; i++) {
-//		if (spaces[i] != NULL) {
-//			handler = i;
-//			spaces[i] = s;
-//			break;
-//		}
-//	}
-	
 	s->handle = handle;
 	spaces[s->handle] = s;
 	
@@ -192,6 +178,7 @@ void* fmemalloc(int handle, long n_bytes) {
 		currFree = s->nextFree;
 		start = s->nextFree;
 	}
+	
 	/*
 		0x0 first fit
 		0x08 next fit
@@ -210,21 +197,25 @@ void* fmemalloc(int handle, long n_bytes) {
 	void* region = NULL;
 	switch (s->listType) {
 		case FF:
+		    printf ("FF\n");
 			do {
 				if (getFreeSize(currFree) >= n_bytes) {
 					/* If we have a previous free block, we have to set its
 					next pointer to the new free block*/
 					region = allocIntoBlock(s, prev, currFree, n_bytes);
+					break;
 				}
 				
 				prev = currFree;
 				currFree = getNextLoc(currFree);
-			} while (currFree != start);
+			} while (currFree != NULL);
 		break;
 		case NF:
+		    printf ("NF\n");
 			do {
 				if (getFreeSize(currFree) >= n_bytes) {
 					region = allocIntoBlock(s, prev, currFree, n_bytes);
+					break;
 				}
 				
 				prev = currFree;
@@ -234,31 +225,35 @@ void* fmemalloc(int handle, long n_bytes) {
 			} while (currFree != start);
 		break;
 		case BF:
+		    printf ("BF\n");
 			do {
 				if (getFreeSize(currFree) >= n_bytes && getUsableSize(currFree) < theBestSize) {
 					theBest = currFree;
+					printf ("b: %p\n", prev);
 					theBestPrev = prev;
 					theBestSize = getUsableSize(currFree);
 				}
 				prev = currFree;
 				currFree = getNextLoc(currFree);
-			} while (currFree != start);
+			} while (currFree != NULL);
 		break;
 		case WF:
+		    printf ("WF\n");
 			do {
 				if (getFreeSize(currFree) >= n_bytes && getUsableSize(currFree) > theWorstSize) {
 					theWorst = currFree;
+					printf ("w: %p\n", currFree);
 					theWorstPrev= prev;
 					theWorstSize = getUsableSize(currFree);
 				}
 				prev = currFree;
 				currFree = getNextLoc(currFree);
-			} while (currFree != start);
+			} while (currFree != NULL);
 		break;
-	}
-	
+	}   
+    
 	/* Actual allocation happens out here for best and worst fit since we need to read the entire array */
-	if (s->listType == 0x08) {
+	if (s->listType == 0x10) {
 		region = allocIntoBlock(s, theBestPrev, theBest, n_bytes);
 	}
 	if (s->listType == 0x18) {

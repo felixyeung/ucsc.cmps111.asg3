@@ -57,12 +57,14 @@ int main () {
 	char* slabString =  (char*)memalloc(sHandle, strlen(myString) + 1);
 	strcpy(slabString, myString);
 	printf("slabString: %s\n", slabString);
-
+	
+/*
 	char* buddyString =  (char*)memalloc(bHandle, strlen(myString) + 1);
 	strcpy(buddyString, myString);
 	printf("buddyString: %s\n", buddyString);
+*/
 	
-	char* freelistString =  (char*)memalloc(ffHandle, strlen(myString) + 1);
+	char* freelistString =  (char*)memalloc(wfHandle, strlen(myString) + 1);
 	strcpy(freelistString, myString);
 	printf("freelistString: %s\n", freelistString);
 }
