@@ -58,13 +58,32 @@ int main () {
 	strcpy(slabString, myString);
 	printf("slabString: %s\n", slabString);
 	
+	char* freelistString =  (char*)memalloc(ffHandle, strlen(myString) + 1);
+	strcpy(freelistString, myString);
+	printf("first freelistString: %s\n", freelistString);
+	
+	freelistString =  (char*)memalloc(nfHandle, strlen(myString) + 1);
+	strcpy(freelistString, myString);
+	printf("next freelistString: %s\n", freelistString);
+	
+	freelistString =  (char*)memalloc(bfHandle, strlen(myString) + 1);
+	strcpy(freelistString, myString);
+	printf("best freelistString: %s\n", freelistString);
+	
+	freelistString =  (char*)memalloc(wfHandle, strlen(myString) + 1);
+	strcpy(freelistString, myString);
+	printf("worst freelistString: %s\n", freelistString);
+	
+	printf("Now, lets try to free our things: \n");
+	
+	memfree(slabString);
+	printf("   freeing slab: [%s]\n", slabString);
+	memfree(freelistString);
+	printf("   freeing freelist: [%s]\n", freelistString);
+		
 /*
 	char* buddyString =  (char*)memalloc(bHandle, strlen(myString) + 1);
 	strcpy(buddyString, myString);
 	printf("buddyString: %s\n", buddyString);
 */
-	
-	char* freelistString =  (char*)memalloc(wfHandle, strlen(myString) + 1);
-	strcpy(freelistString, myString);
-	printf("freelistString: %s\n", freelistString);
 }
