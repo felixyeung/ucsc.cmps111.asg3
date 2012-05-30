@@ -10,6 +10,15 @@ int isPowerOfTwo (unsigned int x) {
  return (x == 1);
 }
 
+int PowerOf (unsigned int x, unsigned int y) {
+int i;
+int z=1;
+for(i=0;i<=y;i++){
+   z = z*x;
+   }
+ return (z);
+}
+
 void markDown(long n_bytes, char** maps, int mapIdx, int blockIdx, int blockSize) {
 	if (n_bytes <= blockSize) {
 		maps[mapIdx][blockIdx] = 1;
@@ -20,19 +29,18 @@ void markDown(long n_bytes, char** maps, int mapIdx, int blockIdx, int blockSize
 void* allocAndMark(struct space* s, long n_bytes, char** maps, int mapIdx, int blockIdx, int blockSize) {
 	int mapSize = 1 << (mapIdx + 1);
 	int j;
+	printf("map %d\n",mapIdx);
 	for (j = blockIdx; j < mapSize; j++) {
 		/* we try to allocate at the current level, figure out which buddy we are*/
 		int buddy;
-		
 		if (j % 2 == 0)
 			buddy = j + 1;
 		else
 			buddy = j - 1;
 			
 		/* we have an in-use buddy, we can allocate */
-		if (maps[mapIdx][buddy] == 1) {
+		if (maps[mapIdx][j] == 0) {
 			maps[mapIdx][j] = 1;
-			
 			/* TODO: resolve the block size somehow */
 			void* slot = s->head + (blockSize * j);
 			
@@ -41,11 +49,9 @@ void* allocAndMark(struct space* s, long n_bytes, char** maps, int mapIdx, int b
 			markDown(n_bytes, maps, mapIdx + 1, j * 2, blockSize / 2);
 			
 			return slot;
-			
 		}
-		else 
-			return allocAndMark(s, n_bytes, maps, mapIdx - 1, j / 2, blockSize * 2);
 	}
+
 	return NULL;
 }
 
@@ -72,10 +78,14 @@ void freeAndMergeBuddies(char** maps, int mapIdx, int b1) {
 
 int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	int i;
-	
+	int p;
+	p=PowerOf(2,parm1);
+	printf("p %d\n",p);
 	/* This is the maximum number of pages we can get from n bytes, where parm1 is the minimum size of a page */
-	int numPages = n_bytes / parm1;
-	
+	int numPages =(n_bytes/p);
+	// printf("pages %d\n",numPages);
+	// printf("n_bytes %d\n",n_bytes);
+	// printf("pages %d\n",parm1);
 	/* if numPages is not a power of two, then there's no way to continue. */
 	if (!isPowerOfTwo(numPages))
 		return -1;
@@ -143,6 +153,8 @@ int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2
 	s->handle = handle;
 	spaces[s->handle] = s;
 	
+	printf("bit maps%d\n",numBitmaps);
+	
 	return s->handle;
 }
 
@@ -150,7 +162,6 @@ void* bmemalloc(int handler, long n_bytes) {
 	int i;
 	/* 512 is the max number of allocators we can have at once */
 	struct space* s = spaces[handler];
-	 
 	int currentBlockSize = s->minPageSize;
 	for (i = s->numBitmaps - 1; i >= 0; i--) {
 		/* Find out if n bytes would fit into our current block lvl */
@@ -160,13 +171,12 @@ void* bmemalloc(int handler, long n_bytes) {
 			/* prepare to iterate over the next level, with double the block size */
 			currentBlockSize *= 2;
 	}
-	
+
 	/* local map */
 	char* map = s->bitmaps[i];
 	
 	/* +1 because we dont have a map of a single item  */
 	int lengthOfMap = 1 << (i + 1);
-	
 	int j;
 	for (j = 0; j < lengthOfMap; j++) {
 		/* find first free */
@@ -199,7 +209,7 @@ void* bmemalloc(int handler, long n_bytes) {
 			}
 		}
 	}
-
+	
 	if (j == lengthOfMap)
 		return NULL;;
 	
@@ -207,7 +217,7 @@ void* bmemalloc(int handler, long n_bytes) {
 	   it is now necessary to recurr and split some blocks up */
 	
 	allocAndMark(s, n_bytes, s->bitmaps, i-1, j, currentBlockSize * 2);
-	
+
 	return NULL;
 }
 
