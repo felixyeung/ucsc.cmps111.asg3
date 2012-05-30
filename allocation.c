@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "space.h"
 
 #define BFLAG 0x01
@@ -64,7 +65,6 @@ void *memalloc(int handle, long n_bytes){
     if (handle < 0 || handle >= NUM_SPACES)
         return NULL;
     if (spaces[handle] != NULL){
-        printf ("space %d: %p\n", handle, spaces[handle]);
 	    type = spaces[handle]->type;
     }
     else{
@@ -93,24 +93,29 @@ void *memalloc(int handle, long n_bytes){
 
 
 void memfree (void *region){
-    char type;
+    struct space* s;
     int i;
-    for(i = 0; i < 512; i++){
-	if((region > spaces[i]->head) && (region < spaces[i]->end)){
-		type = spaces[i]->type;
-		break;
-	}
+    for(i = 0; i < NUM_SPACES; i++){
+        if((region >= spaces[i]->head) && (region <= spaces[i]->end)){
+            s = spaces[i];
+            break;
+        }
     }
 
-    switch (type){
+    if (i == NUM_SPACES) {
+        //ERROR
+        return;
+    }
+    
+    switch (s->type){
         case 'b':
-            bmemfree(region);
+            bmemfree (s, region);
 	    break;	
         case 's':
-            smemfree(region);
+            smemfree (s, region);
 	    break;
         case 'f':
-            fmemfree(region);
+            fmemfree (s, region);
 	    break;
         default:
             //do nothing

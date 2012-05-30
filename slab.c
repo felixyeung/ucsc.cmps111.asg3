@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include "space.h"
@@ -169,10 +170,10 @@ void smemfree (struct space* s, void* region) {
     int offset = region - s->head;
     int slabIdx = (int) (offset / s->slabSize);
     int slabOffset = (int) ((offset % s->slabSize) / s->slabs[slabIdx]);
-
+    
     /* Free the region */
     s->bitmaps[slabIdx][slabOffset] = 0;
-    
+
     /* If all regions in the slab are free, free the slab */
     int i = 0;
     int numRegions = (int) (s->slabSize / s->slabs[slabIdx]);

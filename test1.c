@@ -16,8 +16,10 @@ int main () {
     //Allocate some memory
     void* ptr1 = memalloc (sHandle, 3);
     printf ("allocated %p\n", ptr1);
-    void* ptr2 = memalloc (sHandle, 5);
+    void* ptr2 = memalloc (sHandle, 3);
     printf ("allocated %p\n", ptr2);
+    memfree (ptr1);
+    printf ("freed %p\n", ptr1);
     void* ptr3 = memalloc (fHandle, 10);
     printf ("allocated %p\n", ptr3);
     void* ptr4 = memalloc (bHandle, 16);
