@@ -26,32 +26,47 @@ void printSpace (int handle) {
     printf ("\n");
 }
 
+void showMeTheBitMapPlease(int handle) {
+	struct space* s = spaces[handle];
+	int i;
+	int currMapLen = 1;
+	for (i = 0 ; i < s->numBitmaps; i++) {
+		int j;
+		printf("Bitmap[%d]: ", i);
+		for (j = 0; j < currMapLen; j++) {
+			printf ("%d", s->bitmaps[i][j]);
+		}
+		printf("\n");
+		currMapLen *= 2;
+	}
+}
+
 int main () {
     printf ("smeminit:\n");
     int parm2[5] = {5, 50, 64, 75, 0};
     int sHandle = inits (4096 * 8, 2, parm2);
-//    printSpace (sHandle);
+    printSpace (sHandle);
     printf ("bmeminit:\n");
     int bHandle = initb (0x1000, 8);
-//    printSpace (bHandle);
+    printSpace (bHandle);
+	showMeTheBitMapPlease(bHandle);
     printf ("fmeminit:\n");
     printf ("first fit:\n");
     int ffHandle = initf (10000, 0x00);
     printSpace (ffHandle);
     printf ("next fit:\n");
     int nfHandle = initf (10000, 0x08);
-//    printSpace (nfHandle);
+    printSpace (nfHandle);
     printf ("best fit:\n");
     int bfHandle = initf (10000, 0x10);
-//    printSpace (bfHandle);
+    printSpace (bfHandle);
     printf ("worst fit:\n");
     int wfHandle = initf (10000, 0x18);
-//    printSpace (wfHandle);
+    printSpace (wfHandle);
 	
 	printf("now let's try to allocate a string into all three free slots: \n");
 	
 	char* myString = "This is my string.";
-	char* myString2 = "This is not mystr.";
 	printf("SOURCE: myString: %s\n", myString);
 	
 	printf("TARGETS:\n");
@@ -74,19 +89,17 @@ int main () {
 	freelistString =  (char*)memalloc(wfHandle, strlen(myString) + 1);
 	strcpy(freelistString, myString);
 	printf("worst freelistString: %s\n", freelistString);
+
+	char* buddyString =  (char*)memalloc(bHandle, strlen(myString) + 1);
+	strcpy(buddyString, myString);
+	printf("buddyString: %s\n", buddyString);
 	
 	printf("Now, lets try to free our things: \n");
 	
 	memfree(slabString);
-	char* slabString2 = (char*)memalloc(sHandle, strlen(myString2) + 1);
-	strcpy(slabString2, myString2);
 	printf("   freeing slab: [%s]\n", slabString);
+	/*
 	memfree(freelistString);
-	printf("   freeing freelist (%p): [%p]\n", freelistString, *((void**) freelistString));
-		
-/*
-	char* buddyString =  (char*)memalloc(bHandle, strlen(myString) + 1);
-	strcpy(buddyString, myString);
-	printf("buddyString: %s\n", buddyString);
-*/
+	printf("   freeing freelist: [%s]\n", freelistString);
+	*/
 }
