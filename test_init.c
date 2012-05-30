@@ -24,26 +24,32 @@ void printSpace (int handle) {
                 s->sizeArray, s->numSlabs, s->slabs, s->slabSize);
     printf ("\n");
 }
-
-int main () {
-    printf ("smeminit:\n");
-    int parm2[5] = {5, 50, 64, 75, 0};
-    int sHandle = inits (4096 * 8, 2, parm2);
-    printSpace (sHandle);
-    printf ("bmeminit:\n");
-    int bHandle = initb (0x1000, 8);
-    printSpace (bHandle);
-    printf ("fmeminit:\n");
-    printf ("first fit:\n");
-    int ffHandle = initf (10000, 0x00);
-    printSpace (ffHandle);
-    printf ("next fit:\n");
-    int nfHandle = initf (10000, 0x08);
-    printSpace (nfHandle);
-    printf ("best fit:\n");
-    int bfHandle = initf (10000, 0x10);
-    printSpace (bfHandle);
-    printf ("worst fit:\n");
-    int wfHandle = initf (10000, 0x18);
-    printSpace (wfHandle);
+/*
+void printBmps (char** bitmaps, char type, int numBmps, int bmpSize) {
+    switch (type) {
+    case 'b':
+        int i;
+        int j;
+        for (i = 0; i < numBmps; i++) {
+        }
+        break;
+    case 's':
+        
+        break;
+    default:
+        // Do nothing
+    }
+*/
+int main (int argc, char** argv) {
+        printf ("smeminit:\n");
+        int parm2[5] = {5, 50, 64, 75, 0};
+        int sHandle = inits (4096 * 8, 2, parm2);
+        printSpace (sHandle);
+        printf ("bmeminit:\n");
+        int bHandle = initb (0x1000, 8);
+        printSpace (bHandle);
+        printf ("fmeminit:\n");
+        printf ("first fit:\n");
+        int ffHandle = initf (10000, 0x00);
+        printSpace (ffHandle);
 }

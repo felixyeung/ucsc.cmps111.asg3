@@ -4,8 +4,6 @@
 CSOURCE   = slab.c freelist.c buddy.c allocation.c
 CHEADER   = space.h
 
-TESTSRC   = test1.c
-
 LIBRARY   = libmem.a
 AROPT     = rvs
 
