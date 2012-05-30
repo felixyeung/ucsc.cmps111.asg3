@@ -30,27 +30,28 @@ int main () {
     printf ("smeminit:\n");
     int parm2[5] = {5, 50, 64, 75, 0};
     int sHandle = inits (4096 * 8, 2, parm2);
-    printSpace (sHandle);
+//    printSpace (sHandle);
     printf ("bmeminit:\n");
     int bHandle = initb (0x1000, 8);
-    printSpace (bHandle);
+//    printSpace (bHandle);
     printf ("fmeminit:\n");
     printf ("first fit:\n");
     int ffHandle = initf (10000, 0x00);
     printSpace (ffHandle);
     printf ("next fit:\n");
     int nfHandle = initf (10000, 0x08);
-    printSpace (nfHandle);
+//    printSpace (nfHandle);
     printf ("best fit:\n");
     int bfHandle = initf (10000, 0x10);
-    printSpace (bfHandle);
+//    printSpace (bfHandle);
     printf ("worst fit:\n");
     int wfHandle = initf (10000, 0x18);
-    printSpace (wfHandle);
+//    printSpace (wfHandle);
 	
 	printf("now let's try to allocate a string into all three free slots: \n");
 	
 	char* myString = "This is my string.";
+	char* myString2 = "This is not mystr.";
 	printf("SOURCE: myString: %s\n", myString);
 	
 	printf("TARGETS:\n");
@@ -77,9 +78,11 @@ int main () {
 	printf("Now, lets try to free our things: \n");
 	
 	memfree(slabString);
+	char* slabString2 = (char*)memalloc(sHandle, strlen(myString2) + 1);
+	strcpy(slabString2, myString2);
 	printf("   freeing slab: [%s]\n", slabString);
 	memfree(freelistString);
-	printf("   freeing freelist: [%s]\n", freelistString);
+	printf("   freeing freelist (%p): [%p]\n", freelistString, *((void**) freelistString));
 		
 /*
 	char* buddyString =  (char*)memalloc(bHandle, strlen(myString) + 1);

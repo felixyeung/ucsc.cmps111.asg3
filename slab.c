@@ -166,7 +166,9 @@ void* smemalloc (int handle, long n_bytes) {
     }
 }
 
-void smemfree (struct space* s, void* region) {
+void smemfree (int handle, void* region) {
+    struct space* s = spaces[handle];
+    
     int offset = region - s->head;
     int slabIdx = (int) (offset / s->slabSize);
     int slabOffset = (int) ((offset % s->slabSize) / s->slabs[slabIdx]);

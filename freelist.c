@@ -262,51 +262,51 @@ void* fmemalloc(int handle, long n_bytes) {
 		region = allocIntoBlock(s, theWorstPrev, theWorst, n_bytes);
 	}
 	
+	SIZE (region) = n_bytes;
+	
 	return region;
 }
 
 /*
 We need to free the list and merge it with adjacent lists
 */
-void fmemfree(void* region) {
+void fmemfree(int handle, void* region) {
+	struct space* s = spaces[handle];
+
 	int i;
 	/* capture the space where region resides */
-	for (i = 0; i < 512; i++) {
-		if (region > spaces[i]->head && region < spaces[i]->end) {
-			struct space* s = spaces[i];
-			
-			/* clean some space*/
-			memset(region, 0, SIZE (region));
-			
-			void* left = prevFree(s, region);
-			void* right = nextFree(s, region);
-			
-			/*link region after left */
-			if (left)
-				NEXT (left) = region;
-			/*link region before right*/
-			NEXT (region) = right;
-			
-			void* leftAdj = leftAdjacent(s, region);
-			void* rightAdj = rightAdjacent(s, region);
+	
+	/* clean some space*/
+	//memset(region, 0, SIZE (region));
+	
+	void* left = prevFree(s, region);
+	void* right = nextFree(s, region);
+	
+	/*link region after left */
+	if (left != NULL)
+		NEXT (left) = region;
+	/*link region before right*/
+	NEXT (region) = right;
+	
+	void* leftAdj = leftAdjacent(s, region);
+	void* rightAdj = rightAdjacent(s, region);
 
-			if (rightAdj) {
-				SIZE (region) += SIZE (rightAdj) + 4;
-				NEXT (region) = NEXT (rightAdj);
-				if (s->nextFree == rightAdj) {
-					s->nextFree = NEXT (rightAdj);
-				}
-			}
-			
-			/*increase the free space of left adjcent list */
-			if (leftAdj) {
-				SIZE (leftAdj) += SIZE (region) + 4;
-				NEXT (leftAdj) = NEXT (region);
-				region = leftAdj;
-			}
-			
-			if (region < s->firstFree)
-				s->firstFree = region;
+	if (rightAdj != NULL) {
+		SIZE (region) += SIZE (rightAdj) + 4;
+		NEXT (region) = NEXT (rightAdj);
+		if (s->nextFree == rightAdj) {
+			s->nextFree = NEXT (rightAdj);
+			if (s->nextFree == NULL)
+			    s->nextFree = s->firstFree;
 		}
 	}
+	
+	/*increase the free space of left adjcent list */
+	if (leftAdj != NULL) {
+		SIZE (leftAdj) += SIZE (region) + 4;
+		NEXT (leftAdj) = NEXT (region);
+	}
+	
+	if (region < s->firstFree)
+		s->firstFree = region;
 }

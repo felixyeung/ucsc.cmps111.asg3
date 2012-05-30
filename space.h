@@ -1,7 +1,9 @@
 #ifndef SPACE_H
 #define SPACE_H
 
-#define NUM_SPACES 512 
+#define NUM_SPACES 512
+#define TP( _n ) printf ("test point %f\n", (float) (_n))
+#define TPTR( _p ) printf ("pointer: %p\n", (_p))
 
 struct space {
     char type; //'b' for buddy, 's' for slab, 'f' for free list

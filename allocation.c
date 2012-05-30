@@ -11,10 +11,6 @@
 struct space* spaces[NUM_SPACES];
 int isSpacesInit = 0;
 
-// TEST
-
-// END TEST
-
 int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     int handle;
     int i;
@@ -97,11 +93,13 @@ void *memalloc(int handle, long n_bytes){
 
 
 void memfree (void *region){
-    struct space* s;
+    int handle;
+    char type;
     int i;
     for(i = 0; i < NUM_SPACES; i++){
         if((region >= spaces[i]->head) && (region <= spaces[i]->end)){
-            s = spaces[i];
+            handle = spaces[i]->handle;
+            type = spaces[i]->type;
             break;
         }
     }
@@ -111,15 +109,15 @@ void memfree (void *region){
         return;
     }
     
-    switch (s->type){
+    switch (type){
         case 'b':
-            bmemfree (s, region);
+            bmemfree (handle, region);
 	    break;	
         case 's':
-            smemfree (s, region);
+            smemfree (handle, region);
 	    break;
         case 'f':
-            fmemfree (s, region);
+            fmemfree (handle, region);
 	    break;
         default:
             //do nothing
