@@ -11,6 +11,10 @@
 struct space* spaces[NUM_SPACES];
 int isSpacesInit = 0;
 
+// TEST
+
+// END TEST
+
 int meminit (long n_bytes, unsigned int flags, int parm1, int *parm2){
     int handle;
     int i;

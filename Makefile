@@ -33,10 +33,10 @@ ${LIBRARY} : ${OBJECTS}
 	gcc ${GCCOPT} -c $<
 
 clean : 
-	- rm ${OBJECTS}
+	- rm ${OBJECTS} ${TESTFILE}.o
 	
 spotless : clean
-	- rm ${LIBRARY}
+	- rm ${LIBRARY} ${TESTFILE}
 
 sync :
 	rsync ${RSYNCOPT} qrivers@unix.ic.ucsc.edu:${RSYNCPATH} ./
