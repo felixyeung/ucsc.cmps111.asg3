@@ -48,7 +48,7 @@ void* allocIntoBlock(struct space* s, void* prev , void* target, long n_bytes) {
 		void* tmp =  target + n_bytes + 4;
 		NEXT (tmp) = NEXT (target);
 		
-		SIZE (tmp) = SIZE (target) - n_bytes - 4; 
+		SIZE (tmp) = SIZE (target) - n_bytes - 4;
 		/* prev now points to the newly splitted block */
     	if (prev != NULL)
     		NEXT (prev) = tmp;
@@ -269,7 +269,7 @@ void* fmemalloc(int handle, long n_bytes) {
 	    return NULL;
 	
 	SIZE (region) = n_bytes;
-	
+
 	return region;
 }
 
@@ -288,15 +288,15 @@ void fmemfree(int handle, void* region) {
 	void* left = prevFree(s, region);
 	void* right = nextFree(s, region);
 	
+	void* leftAdj = leftAdjacent(s, region);
+	void* rightAdj = rightAdjacent(s, region);
+    
 	/*link region after left */
 	if (left != NULL)
 		NEXT (left) = region;
 	/*link region before right*/
 	NEXT (region) = right;
 	
-	void* leftAdj = leftAdjacent(s, region);
-	void* rightAdj = rightAdjacent(s, region);
-
 	if (rightAdj != NULL) {
 		SIZE (region) += SIZE (rightAdj) + 4;
 		NEXT (region) = NEXT (rightAdj);
@@ -307,12 +307,16 @@ void fmemfree(int handle, void* region) {
 		}
 	}
 	
-	/*increase the free space of left adjcent list */
-	if (leftAdj != NULL) {
-		SIZE (leftAdj) += SIZE (region) + 4;
-		NEXT (leftAdj) = NEXT (region);
-	}
-	
 	if (region < s->firstFree)
 		s->firstFree = region;
+	
+	/*increase the free space of left adjacent list */
+	if (leftAdj != NULL) {
+	    
+		SIZE (leftAdj) += SIZE (region) + 4;
+		NEXT (leftAdj) = NEXT (region);
+		
+		if (s->firstFree > leftAdj)
+		    s->firstFree = leftAdj;
+	}
 }
