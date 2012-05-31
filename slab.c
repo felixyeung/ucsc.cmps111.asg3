@@ -27,6 +27,7 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
     
     // Calculate the number of slabs
     int slabSize = parm1 * PAGESIZE;
+	
 	if (slabSize > n_bytes)
 		return -1;
 	
