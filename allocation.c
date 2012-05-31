@@ -109,6 +109,7 @@ void memfree (void *region){
     
     switch (s->type){
         case 'b':
+<<<<<<< HEAD
             bmemfree (region);
 	    break;	
         case 's':
@@ -116,6 +117,15 @@ void memfree (void *region){
 	    break;
         case 'f':
             fmemfree (region);
+=======
+            bmemfree (s, region);
+	    break;	
+        case 's':
+            smemfree (s, region);
+	    break;
+        case 'f':
+            fmemfree (s, region);
+>>>>>>> 10affc5621ee9e9fbccbb07f1f861c6bc54f54e8
 	    break;
         default:
             //do nothing

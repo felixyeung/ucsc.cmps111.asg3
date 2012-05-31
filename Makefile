@@ -22,8 +22,11 @@ TAREXT    = .tar.gz
 RSYNCPATH = ~/private/cs111/${ASGNAME}/
 RSYNCOPT  = -r
 
+<<<<<<< HEAD
 TESTFILE  = test_init
 
+=======
+>>>>>>> 10affc5621ee9e9fbccbb07f1f861c6bc54f54e8
 all : ${LIBRARY} clean
 
 ${LIBRARY} : ${OBJECTS}
@@ -42,8 +45,13 @@ sync :
 	rsync ${RSYNCOPT} qrivers@unix.ic.ucsc.edu:${RSYNCPATH} ./
 
 testrun : all
+<<<<<<< HEAD
 	gcc ${TESTFILE}.c libmem.a -o ${TESTFILE}
 	./${TESTFILE}
+=======
+	gcc test1.c libmem.a -o test1
+	./test1
+>>>>>>> 10affc5621ee9e9fbccbb07f1f861c6bc54f54e8
 
 tar : spotless
 	- rm ${ASGNAME}.${TAREXT}

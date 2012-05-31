@@ -18,6 +18,7 @@ int main () {
     printf ("allocated %p\n", ptr1);
     void* ptr2 = memalloc (sHandle, 3);
     printf ("allocated %p\n", ptr2);
+<<<<<<< HEAD
 //    memfree (ptr1);
 //    printf ("freed %p\n", ptr1);
 //    void* ptr3 = memalloc (fHandle, 10);
@@ -27,6 +28,17 @@ int main () {
 //    void* ptr5 = memalloc (sHandle2, 150);
 //    printf ("allocated %p\n", ptr5);
 //    printf ("%p, %p, %p, %p, %p\n", ptr1, ptr2, ptr3, ptr4, ptr5);
+=======
+    memfree (ptr1);
+    printf ("freed %p\n", ptr1);
+    void* ptr3 = memalloc (fHandle, 10);
+    printf ("allocated %p\n", ptr3);
+    void* ptr4 = memalloc (bHandle, 16);
+    printf ("allocated %p\n", ptr4);
+    void* ptr5 = memalloc (sHandle2, 150);
+    printf ("allocated %p\n", ptr5);
+    printf ("%p, %p, %p, %p, %p\n", ptr1, ptr2, ptr3, ptr4, ptr5);
+>>>>>>> 10affc5621ee9e9fbccbb07f1f861c6bc54f54e8
     
     return 0;
 }
