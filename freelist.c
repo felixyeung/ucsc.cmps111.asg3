@@ -219,7 +219,6 @@ void* fmemalloc(int handle, long n_bytes) {
 					region = allocIntoBlock(s, prev, currFree, n_bytes);
 					break;
 				}
-				
 				prev = currFree;
 				currFree = getNextLoc(currFree);
 				if (currFree == NULL)
@@ -252,8 +251,8 @@ void* fmemalloc(int handle, long n_bytes) {
 				currFree = getNextLoc(currFree);
 			} while (currFree != NULL);
 		break;
-	}   
-    
+	}
+	
 	/* Actual allocation happens out here for best and worst fit since we need to read the entire array */
 	if (s->listType == 0x10) {
         if (theBest == NULL)
@@ -265,6 +264,9 @@ void* fmemalloc(int handle, long n_bytes) {
             return NULL;
 		region = allocIntoBlock(s, theWorstPrev, theWorst, n_bytes);
 	}
+	
+	if (region == NULL)
+	    return NULL;
 	
 	SIZE (region) = n_bytes;
 	
