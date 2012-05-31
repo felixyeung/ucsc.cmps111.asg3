@@ -110,6 +110,12 @@ int main () {
 	char* buddyString =  (char*)memalloc(bHandle, strlen(myString) + 1);
 	strcpy(buddyString, myString);
 	printf("buddyString: %s\n", buddyString);
+	char* buddyString2 =  (char*)memalloc(bHandle, strlen(myString2) + 1);
+	strcpy(buddyString2, myString2);
+	printf("buddyString2: %s\n", buddyString2);
+	char* buddyString3 =  (char*)memalloc(bHandle, strlen(myString3) + 1);
+	strcpy(buddyString3, myString3);
+	printf("buddyString3: %s\n", buddyString3);
 	
 	printf("Now, lets try to free our things: \n");
 	
