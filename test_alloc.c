@@ -7,6 +7,11 @@
 #define initb( _a, _b ) meminit ((_a), 0x01, (_b), NULL)
 #define initf( _a, _b ) meminit ((_a), (0x04 | _b), NULL, NULL)
 
+void printWaste(int handle) {
+	struct space* s = spaces[handle];
+	printf("======\n======>%f used total, %f managed.\n======\n", ((void*)s->end - (void*)s), s->size);
+}
+
 void printSpace (int handle) {
     struct space* s = spaces[handle];
 
@@ -44,7 +49,8 @@ void showMeTheBitMapPlease(int handle) {
 int main () {
     printf ("smeminit:\n");
     int parm2[5] = {5, 50, 64, 75, 0};
-    int sHandle = inits (4096 * 8, 2, parm2);
+    int sHandle = inits (4096 * 128, 2, parm2);
+	printWaste(sHandle);
     printSpace (sHandle);
     printf ("bmeminit:\n");
     int bHandle = initb (0x1000, 8);

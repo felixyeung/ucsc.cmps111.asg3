@@ -17,14 +17,19 @@ int min (int* array) {
 }
 
 int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
-    // Get the size of parm2, to be used when making sizeArray
+	// Get the size of parm2, to be used when making sizeArray
     int sizeArrayLen = 1;
     while (parm2[sizeArrayLen - 1] != 0) {
         sizeArrayLen += 1;
     }
+	if (sizeArrayLen < 1)
+		return -1;
     
     // Calculate the number of slabs
     int slabSize = parm1 * PAGESIZE;
+	if (slabSize > n_bytes)
+		return -1;
+	
     int numSlabs = n_bytes / slabSize;
     
     int minPieceSize = min (parm2);
@@ -37,7 +42,10 @@ int smeminit (int handle, long n_bytes, unsigned int flags, int parm1, int* parm
                        + sizeof (char*) * numSlabs
                        + sizeof (char) * numSlabs * maxBitmapLen
                        + n_bytes;
+					   
     void* allocBlock = malloc (bytesToAlloc);
+	if (allocBlock <= 0)
+		return -1;
     
     // Initialize the struct.
     struct space* newSpace = (struct space*) allocBlock;

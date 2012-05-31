@@ -10,75 +10,6 @@ int isPowerOfTwo (unsigned int x) {
  return (x == 1);
 }
 
-void markDown(long n_bytes, char** maps, int mapIdx, int blockIdx, int blockSize) {
-	if (n_bytes <= blockSize) {
-		maps[mapIdx][blockIdx] = 1;
-		markDown(n_bytes, maps, mapIdx + 1, blockIdx * 2, blockSize / 2);
-	}
-}
-
-void* allocAndMark(struct space* s, long n_bytes, char** maps, int mapIdx, int blockIdx, int blockSize) {
-	printf("\nmaps: %p\n", maps);
-	int mapSize = 1 << (mapIdx + 1);
-	int j;
-	printf("blockIdx(j): %d\n", blockIdx);
-	printf("mapSize: %d\n", mapSize);
-	for (j = blockIdx; j < mapSize; j++) {
-		/* we try to allocate at the current level, figure out which buddy we are*/
-		int buddy;
-		
-		printf("j: %d\n", j);
-		if (j % 2 == 0)
-			buddy = j + 1;
-		else
-			buddy = j - 1;
-			
-		printf("   buddy: %p\n", buddy);
-		/* we have an in-use buddy, we can allocate */
-		printf("   mapIdx: %d\n", mapIdx);
-		printf("   maps[mapIdx]: %p\n", maps[mapIdx]);
-		printf("   maps[mapIdx][buddy]: %p\n", maps[mapIdx][buddy]);
-		if (maps[mapIdx][buddy] == 1) {
-			maps[mapIdx][j] = 1;
-			
-			/* TODO: resolve the block size somehow */
-			void* slot = s->head + (blockSize * j);
-			
-			/* WE need to travel back down 
-			*/
-			markDown(n_bytes, maps, mapIdx + 1, j * 2, blockSize / 2);
-			
-			return slot;
-			
-		}
-		else if (mapIdx >= 1) {
-			return allocAndMark(s, n_bytes, maps, mapIdx - 1, j / 2, blockSize * 2);
-		}
-	}
-	return NULL;
-}
-
-void freeAndMergeBuddies(char** maps, int mapIdx, int b1) {	
-	/*first free the first buddy */
-	
-	maps[mapIdx][b1] = 0;
-	
-	/* then, let's look at our buddy */
-	int b2;
-	if (b1 % 2 == 0) {
-		b2 = b1 + 1;
-	}
-	else {
-		b2 = b1 - 1;
-	}
-	
-	/* This function will resolve the parent of b1 b2, then recurr*/
-	if (maps[mapIdx][b2] == 0) {
-		int parent = b1 / 2;
-		freeAndMergeBuddies(maps, mapIdx - 1, parent);
-	}
-}
-
 int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
 	int i;
 	
@@ -112,6 +43,9 @@ int bmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2
 	
 	/* This is the space everything goes into */
 	void* myBigBlock = malloc(totalSpace);
+	if (myBigBlock <= 0)
+		return -1;
+	
 	void* tmp_front = myBigBlock;
 	
 	/* our space struct resides in the front of myBigBlock */

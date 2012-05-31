@@ -117,10 +117,14 @@ void* rightAdjacent(struct space* s, void* region) {
  this is what a free list item looks like: 
 [ freespace (4 bytes) | next (4 bytes) | data (n bytes) ]
 */
-int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {
+int fmeminit(int handle, long n_bytes, unsigned int flags, int parm1, int* parm2) {	
 	//Our space model and actual free spaces are allocated here.
 	size_t totalSpace = sizeof(struct space) + n_bytes;
+	
 	void* myBigBlock = malloc(totalSpace);
+	if (myBigBlock <= 0)
+		return -1;
+	
 	void* tmp_front = myBigBlock;
 	
 	
