@@ -121,6 +121,10 @@ int main () {
 	
 	memfree(slabString);
 	printf("   freeing slab: [%s]\n", slabString);
+	memfree(buddyString);
+	printf("   freeing buddy (%p): [%s]\n", buddyString, slabString);
+	memfree(buddyString2);
+	printf("   freeing buddy (%p): [%s]\n", buddyString2, buddyString2);
 	/*
 	memfree(freelistString);
 	printf("   freeing freelist: [%s]\n", freelistString);

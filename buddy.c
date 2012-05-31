@@ -237,35 +237,34 @@ for map in bitmaps:
 		if head + (i * blocksize):
 			free;
 */
-void bmemfree(void* region) {
+void bmemfree(int handle, void* region) {
+	struct space* s = spaces[handle];
+	
+	int currentBlockSize = s->minPageSize;
+	
+	/* get the bitmap index */
+	int offset = region - s->head;
+	int index = offset / s->minPageSize;
+	
+	/* look from the lowest bitmap first */
 	int i;
-	/* capture the space where region resides */
-	for (i = 0; i < NUM_SPACES; i++) {
-		if (region > spaces[i]->head && region < spaces[i]->end) {
-			struct space* s = spaces[i];
-			
-			/* we have found the space that our region is in */
-			int currentBlockSize = s->minPageSize;
-			
-			int j;
-			/* look from the lowest bitmap first */
-			for (j = s->numBitmaps - 1; j >= 0; j--) {
-				// for our bit map, look at each block and see if our region starts there.
-				char* map = s->bitmaps[j];
-				int lengthOfMap = 2 ^ j;
-				int k;
-				for (k = 0; k < lengthOfMap -1; k++) {
-					/* if  region is found and it's marked as 1 */
-					if (s->head + (k * currentBlockSize) == region && map[k] == 1) {
-						/* We have indentified the region, and can now free */
-						
-						freeAndMergeBuddies(s->bitmaps, j, k);
-					}
-				}
-				/*ready to ready the next map */
-				currentBlockSize *= 2;
-			}
-		}
-		/* nothing happens in this case */
+	for (i = s->numBitmaps - 1; i >= 0; i--) {
+		if (s->bitmaps[i][index] == 1)
+			break;
+		else
+			index /= 2;
+	}
+	
+	/* now we know the index of the region */
+	/* walk up, freeing and possibly merging */
+	int j;
+	for (j = i; j <= 0; j--) {
+		s->bitmaps[j][index] = 0;
+		
+		int buddyIndex = getBuddyIndex (index);
+		if (j == 0 || s->bitmaps[j][buddyIndex] != 0)
+			break;
+		else
+			index /= 2;
 	}
 }
