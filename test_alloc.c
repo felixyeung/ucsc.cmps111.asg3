@@ -66,17 +66,34 @@ int main () {
 	
 	printf("now let's try to allocate a string into all three free slots: \n");
 	
+	printf("SOURCE: \n");
 	char* myString = "This is my string.";
-	printf("SOURCE: myString: %s\n", myString);
+	printf("myString: %s\n", myString);
+	char* myString2 = "This is my second string.";
+	printf("myString2: %s\n", myString2);
+	char* myString3 = "This is my third string!";
+	printf("myString3: %s\n", myString3);
 	
 	printf("TARGETS:\n");
 	char* slabString =  (char*)memalloc(sHandle, strlen(myString) + 1);
 	strcpy(slabString, myString);
 	printf("slabString: %s\n", slabString);
+	char* slabString2 =  (char*)memalloc(sHandle, strlen(myString2) + 1);
+	strcpy(slabString2, myString2);
+	printf("slabString2: %s\n", slabString2);
+	char* slabString3 =  (char*)memalloc(sHandle, strlen(myString3) + 1);
+	strcpy(slabString3, myString3);
+	printf("slabString3: %s\n", slabString3);
 	
 	char* freelistString =  (char*)memalloc(ffHandle, strlen(myString) + 1);
 	strcpy(freelistString, myString);
 	printf("first freelistString: %s\n", freelistString);
+	char* freelistString2 =  (char*)memalloc(ffHandle, strlen(myString2) + 1);
+	strcpy(freelistString2, myString2);
+	printf("first freelistString2: %s\n", freelistString2);
+	char* freelistString3 =  (char*)memalloc(ffHandle, strlen(myString3) + 1);
+	strcpy(freelistString3, myString3);
+	printf("first freelistString3: %s\n", freelistString3);
 	
 	freelistString =  (char*)memalloc(nfHandle, strlen(myString) + 1);
 	strcpy(freelistString, myString);

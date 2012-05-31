@@ -1,0 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "space.h"
+
+#define inits( _a, _b, _c ) meminit ((_a), 0x02, (_b), (_c))
+#define initb( _a, _b ) meminit ((_a), 0x01, (_b), NULL)
+#define initf( _a, _b ) meminit ((_a), (0x04 | _b), NULL, NULL)
+
