@@ -9,7 +9,9 @@
 
 void printWaste(int handle) {
 	struct space* s = spaces[handle];
-	printf("======\n======>%f used total, %f managed.\n======\n", ((void*)s->end - (void*)s), s->size);
+	printf("============================================\n");
+	printf("======>%d used total, %d managed.\n", (int)((void*)s->end - 1 - (void*)s), s->size);
+	printf("============================================\n");
 }
 
 void printSpace (int handle) {
@@ -51,23 +53,30 @@ int main () {
     int parm2[5] = {5, 50, 64, 75, 0};
     int sHandle = inits (4096 * 128, 2, parm2);
 	printWaste(sHandle);
-    printSpace (sHandle);
+	printSpace (sHandle);
+	
     printf ("bmeminit:\n");
     int bHandle = initb (0x1000, 8);
+	printWaste(bHandle);
     printSpace (bHandle);
 	showMeTheBitMapPlease(bHandle);
+	
     printf ("fmeminit:\n");
     printf ("first fit:\n");
     int ffHandle = initf (10000, 0x00);
+	printWaste(ffHandle);
     printSpace (ffHandle);
     printf ("next fit:\n");
     int nfHandle = initf (10000, 0x08);
+	printWaste(nfHandle);
     printSpace (nfHandle);
     printf ("best fit:\n");
     int bfHandle = initf (10000, 0x10);
+	printWaste(bfHandle);
     printSpace (bfHandle);
     printf ("worst fit:\n");
     int wfHandle = initf (10000, 0x18);
+	printWaste(wfHandle);
     printSpace (wfHandle);
 	
 	printf("now let's try to allocate a string into all three free slots: \n");
